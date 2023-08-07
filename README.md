@@ -39,7 +39,9 @@ Provides ODrive/system level status updates.
 Requires setting a non-zero period for the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages)
 
 `error_msg_rate_ms`
+
 `temperature_msg_rate_ms`
+
 `bus_voltage_msg_rate_ms`
 
 **note** Each published message will wait for a new value from these endpoints. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
@@ -50,8 +52,11 @@ Provides Controller level status updates.
 Requires setting a non-zero period for the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages)
 
 `heartbeat_msg_rate_ms`
+
 `encoder_msg_rate_ms`
+
 `iq_msg_rate_ms`
+
 `torques_msg_rate_ms`
 
 **note** Each published message will wait for a new value from these endpoints. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
@@ -61,3 +66,20 @@ Requires setting a non-zero period for the following [cyclic messages](https://d
 #### AxisState
 
 Sets the axes requested state. This service requires regular heartbeat messages to determine the procedure result and will block until the procedure completes, with a minimum call time of 1 second.
+
+### Datatypes
+
+All of the Message/Service fields are directly related to their corresponding CAN message. For more detailed information about each type, and how to interpet the data, please refer to the [ODrive CAN protocol documentation](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#messages)
+
+## Using Python Enums
+
+**Python Example Node coming soon!**
+
+In the meantime, here is how you can use the [odrive python package](https://pypi.org/project/odrive/) to display the enums:
+
+    from odrive_can.msgs import ControllerStatus # remember to include odrive_can as a package dependency
+    from odrive.enums import ProcedureResult
+    ... # Node setup
+    ctrl_stat = ControllerStatus()
+    ... # receive message data
+    print(ProcedureResult(ctrl_stat.procedure_result))
