@@ -78,7 +78,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
     switch(frame.can_id & 0x1F) {
         case CmdId::kHeartbeat: {
-            if (!VERIFY_LENGTH("kHeartbeat", 8)) break;
+            if (!verify_length("kHeartbeat", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             ctrl_stat_.active_errors    = read_le<uint32_t>(frame.data + 0);
             ctrl_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
@@ -89,7 +89,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
         case CmdId::kGetError: {
-            if (!VERIFY_LENGTH("kGetError", 8)) break;
+            if (!verify_length("kGetError", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
             odrv_stat_.active_errors = read_le<uint32_t>(frame.data + 0);
             odrv_stat_.disarm_reason = read_le<uint32_t>(frame.data + 4);
@@ -97,7 +97,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
         case CmdId::kGetEncoderEstimates: {
-            if (!VERIFY_LENGTH("kGetEncoderEstimates", 8)) break;
+            if (!verify_length("kGetEncoderEstimates", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             ctrl_stat_.pos_estimate = read_le<float>(frame.data + 0);
             ctrl_stat_.vel_estimate = read_le<float>(frame.data + 4);
@@ -105,7 +105,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
         case CmdId::kGetIq: {
-            if (!VERIFY_LENGTH("kGetIq", 8)) break;
+            if (!verify_length("kGetIq", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             ctrl_stat_.iq_setpoint = read_le<float>(frame.data + 0);
             ctrl_stat_.iq_measured = read_le<float>(frame.data + 4);
@@ -113,7 +113,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
         case CmdId::kGetTemp: {
-            if (!VERIFY_LENGTH("kGetTemp", 8)) break;
+            if (!verify_length("kGetTemp", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
             odrv_stat_.fet_temperature   = read_le<float>(frame.data + 0);
             odrv_stat_.motor_temperature = read_le<float>(frame.data + 4);
@@ -121,7 +121,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
         case CmdId::kGetBusVoltageCurrent: {
-            if (!VERIFY_LENGTH("kGetBusVoltageCurrent", 8)) break;
+            if (!verify_length("kGetBusVoltageCurrent", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
@@ -129,7 +129,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
         case CmdId::kGetTorques: {
-            if (!VERIFY_LENGTH("kGetTorques", 8)) break;
+            if (!verify_length("kGetTorques", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             ctrl_stat_.torque_target   = read_le<float>(frame.data + 0);
             ctrl_stat_.torque_estimate = read_le<float>(frame.data + 4);
@@ -187,7 +187,7 @@ void ODriveCanNode::request_state_callback() {
         std::unique_lock<std::mutex> guard(axis_state_mutex_);
         write_le<uint32_t>(axis_state_, frame.data);
     }
-    frame.can_dlc = 4;
+    frame.len = 4;
     can_intf_.send_can_frame(frame);
 }
 
@@ -202,7 +202,7 @@ void ODriveCanNode::ctrl_msg_callback() {
         write_le<uint32_t>(ctrl_msg_.input_mode,   frame.data + 4);
         control_mode = ctrl_msg_.control_mode;
     }
-    frame.can_dlc = 8;
+    frame.len = 8;
     can_intf_.send_can_frame(frame);
     
     frame = can_frame{};
@@ -216,7 +216,7 @@ void ODriveCanNode::ctrl_msg_callback() {
             frame.can_id = node_id_ << 5 | kSetInputTorque;
             std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
             write_le<float>(ctrl_msg_.input_torque, frame.data);
-            frame.can_dlc = 4;
+            frame.len = 4;
             break;
         }
         case ControlMode::kVelocityControl: {
@@ -225,7 +225,7 @@ void ODriveCanNode::ctrl_msg_callback() {
             std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
             write_le<float>(ctrl_msg_.input_vel,       frame.data);
             write_le<float>(ctrl_msg_.input_torque, frame.data + 4);
-            frame.can_dlc = 8;
+            frame.len = 8;
             break;
         }
         case ControlMode::kPositionControl: {
@@ -235,7 +235,7 @@ void ODriveCanNode::ctrl_msg_callback() {
             write_le<float>(ctrl_msg_.input_pos,  frame.data);
             write_le<int8_t>(((int8_t)((ctrl_msg_.input_vel) * 1000)),    frame.data + 4);
             write_le<int8_t>(((int8_t)((ctrl_msg_.input_torque) * 1000)), frame.data + 6);
-            frame.can_dlc = 8;
+            frame.len = 8;
             break;
         }    
         default: 
@@ -244,4 +244,11 @@ void ODriveCanNode::ctrl_msg_callback() {
     }
 
     can_intf_.send_can_frame(frame);
+}
+
+inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
+    bool valid = expected == length;
+    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "received %s", name.c_str());
+    if (!valid) RCLCPP_WARN(rclcpp::Node::get_logger(), "Incorrect %s frame length: %d != %d", name.c_str(), length, expected);
+    return valid;
 }

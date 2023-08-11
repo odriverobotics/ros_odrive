@@ -35,6 +35,7 @@ private:
     void service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response);
     void request_state_callback();
     void ctrl_msg_callback();
+    inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
     
     uint16_t node_id_;
     SocketCanIntf can_intf_ = SocketCanIntf();
@@ -61,14 +62,5 @@ private:
     rclcpp::Service<AxisState>::SharedPtr service_;
 
 };
-
-#define VERIFY_LENGTH(name, length) \
-    ({ \
-        RCLCPP_DEBUG(rclcpp::Node::get_logger(), "received %s", name); \
-        if (frame.can_dlc != length) { \
-            RCLCPP_WARN(rclcpp::Node::get_logger(), "Incorrect %s frame length: %d != %d", name, frame.can_dlc, length); \
-        } \
-        frame.can_dlc == length; \
-    })
 
 #endif // ODRIVE_CAN_NODE_HPP

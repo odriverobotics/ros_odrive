@@ -40,10 +40,13 @@ bool SocketCanIntf::init(const std::string& interface, EpollEventLoop* event_loo
     }
 
     struct msghdr message = {
+        .msg_name = nullptr,
+        .msg_namelen = 0,
         .msg_iov = nullptr,
         .msg_iovlen = 0,
         .msg_control = nullptr,
-        .msg_controllen = 0
+        .msg_controllen = 0,
+        .msg_flags = 0
     };
 
     int retcode = recvmsg(socket_id_, &message, 0);
@@ -104,10 +107,13 @@ bool SocketCanIntf::read_nonblocking() {
 
     struct iovec vec = {.iov_base = &frame, .iov_len = sizeof(frame)};
     struct msghdr message = {
+        .msg_name = nullptr,
+        .msg_namelen = 0,
         .msg_iov = &vec, 
         .msg_iovlen = 1,
         .msg_control = &ctrlmsg,
-        .msg_controllen = sizeof(ctrlmsg)
+        .msg_controllen = sizeof(ctrlmsg),
+        .msg_flags = 0
         };
 
     ssize_t n_received = recvmsg(socket_id_, &message, MSG_DONTWAIT);

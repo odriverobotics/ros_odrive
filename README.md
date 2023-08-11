@@ -2,24 +2,26 @@
 
 This repository contains the development of a ROS2 node intended for communication with ODrive Pro/S1 devices over the CAN interface.
 
+For information about installation, prerequisites, and getting started, checkout the official ODrive [ROS CAN Package](https://docs.odriverobotics.com/v/latest/guides/ros-package.html) Guide.
+
 ## Interface
 ### Nodes
 #### odrive_can_node
 
 This node is designed to interface with the ODrive Pro/S1 series of motor controllers over the CAN bus.
 
-* subscribes to: /control_message (ControlMessage)
+* subscribes to: `/control_message` ([ControlMessage](#controlmessage))
 
 * publishes: 
-    * /odrive_status (ODriveStatus)
-    * /controller_status (ControllerStatus)
+    * `/odrive_status` ([ODriveStatus](#odrivestatus))
+    * `/controller_status` ([ControllerStatus](#controllerstatus))
 
-* service: /request_axis_state (AxisState)
+* service: `/request_axis_state` ([AxisState](#axisstate))
 
 * parameters:
 
-    * node_id: The node_id of the device this node will attach to
-    * interface: the network interface name for the can bus
+    * `node_id`: The node_id of the device this node will attach to
+    * `interface`: the network interface name for the can bus
 
 ### Messages
 
