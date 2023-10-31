@@ -5,7 +5,7 @@
 #include "odrive_can/msg/o_drive_status.hpp"
 #include "odrive_can/msg/controller_status.hpp"
 #include "odrive_can/msg/control_message.hpp"
-#include "odrive_can/srv/axis_state.hpp"
+#include "odrive_can/srv/request_axis_state.hpp"
 #include "socket_can.hpp"
 
 #include <mutex>
@@ -22,7 +22,7 @@ using ODriveStatus = odrive_can::msg::ODriveStatus;
 using ControllerStatus = odrive_can::msg::ControllerStatus;
 using ControlMessage = odrive_can::msg::ControlMessage;
 
-using AxisState = odrive_can::srv::AxisState;
+using RequestAxisState = odrive_can::srv::RequestAxisState;
 
 class ODriveCanNode : public rclcpp::Node {
 public:
@@ -32,7 +32,7 @@ public:
 private:
     void recv_callback(const can_frame& frame);
     void subscriber_callback(const ControlMessage::SharedPtr msg);
-    void service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response);
+    void service_callback(const std::shared_ptr<RequestAxisState::Request> request, std::shared_ptr<RequestAxisState::Response> response);
     void request_state_callback();
     void ctrl_msg_callback();
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
@@ -59,7 +59,7 @@ private:
     uint32_t axis_state_;
     std::mutex axis_state_mutex_;
     std::condition_variable fresh_heartbeat_;
-    rclcpp::Service<AxisState>::SharedPtr service_;
+    rclcpp::Service<RequestAxisState>::SharedPtr service_;
 
 };
 

@@ -2,5 +2,5 @@ float32 bus_voltage
 float32 bus_current
 float32 fet_temperature
 float32 motor_temperature
-uint32 active_errors
-uint32 disarm_reason
+ActiveErrors active_errors
+ActiveErrors disarm_reason

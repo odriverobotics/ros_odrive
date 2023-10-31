@@ -4,7 +4,7 @@ float32 torque_target
 float32 torque_estimate
 float32 iq_setpoint
 float32 iq_measured
-uint32 active_errors
-uint8 axis_state
-uint8 procedure_result
+ActiveErrors active_errors
+AxisState axis_state
+ProcedureResult procedure_result
 bool trajectory_done_flag
