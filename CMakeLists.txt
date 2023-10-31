@@ -11,10 +11,15 @@ find_package(rclcpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/ActiveErrors.msg"
+  "msg/AxisState.msg"
   "msg/ControlMessage.msg"
+  "msg/ControlMode.msg"
   "msg/ControllerStatus.msg"
+  "msg/InputMode.msg"
   "msg/ODriveStatus.msg"
-  "srv/AxisState.srv"
+  "msg/ProcedureResult.msg"
+  "srv/RequestAxisState.srv"
 )
 ament_export_dependencies(rosidl_default_runtime)
 
@@ -41,6 +46,8 @@ install(
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(DIRECTORY include/ DESTINATION include)
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)

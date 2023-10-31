@@ -41,7 +41,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_message", ctrl_msg_qos, std::bind(&ODriveCanNode::subscriber_callback, this, _1));
 
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
-    service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos);
+    service_ = rclcpp::Node::create_service<RequestAxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos);
 }
 
 void ODriveCanNode::deinit() {
@@ -80,10 +80,10 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         case CmdId::kHeartbeat: {
             if (!verify_length("kHeartbeat", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
-            ctrl_stat_.active_errors    = read_le<uint32_t>(frame.data + 0);
-            ctrl_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
-            ctrl_stat_.procedure_result  = read_le<uint8_t>(frame.data + 5);
-            ctrl_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
+            ctrl_stat_.active_errors.errors    = read_le<uint32_t>(frame.data + 0);
+            ctrl_stat_.axis_state.state        = read_le<uint8_t>(frame.data + 4);
+            ctrl_stat_.procedure_result.result = read_le<uint8_t>(frame.data + 5);
+            ctrl_stat_.trajectory_done_flag    = read_le<bool>(frame.data + 6);
             ctrl_pub_flag_ |= 0b0001;
             fresh_heartbeat_.notify_one();
             break;
@@ -91,8 +91,8 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         case CmdId::kGetError: {
             if (!verify_length("kGetError", 8, frame.len)) break;
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
-            odrv_stat_.active_errors = read_le<uint32_t>(frame.data + 0);
-            odrv_stat_.disarm_reason = read_le<uint32_t>(frame.data + 4);
+            odrv_stat_.active_errors.errors = read_le<uint32_t>(frame.data + 0);
+            odrv_stat_.disarm_reason.errors = read_le<uint32_t>(frame.data + 4);
             odrv_pub_flag_ |= 0b001;
             break;
         }
@@ -159,10 +159,10 @@ void ODriveCanNode::subscriber_callback(const ControlMessage::SharedPtr msg) {
     sub_evt_.set();
 }
 
-void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response) {
+void ODriveCanNode::service_callback(const std::shared_ptr<RequestAxisState::Request> request, std::shared_ptr<RequestAxisState::Response> response) {
     {
         std::unique_lock<std::mutex> guard(axis_state_mutex_);
-        axis_state_ = request->axis_requested_state;
+        axis_state_ = request->axis_requested_state.state;
         RCLCPP_INFO(rclcpp::Node::get_logger(), "requesting axis state: %d", axis_state_);
     }
     srv_evt_.set();
@@ -170,7 +170,7 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
     std::unique_lock<std::mutex> guard(ctrl_stat_mutex_); // define lock for controller status
     auto call_time = std::chrono::steady_clock::now();
     fresh_heartbeat_.wait(guard, [this, &call_time]() {
-        bool complete = (this->ctrl_stat_.procedure_result != 1) && // make sure procedure_result is not busy
+        bool complete = (this->ctrl_stat_.procedure_result.result != 1) && // make sure procedure_result is not busy
             (std::chrono::steady_clock::now() - call_time >= std::chrono::seconds(1)); // wait for minimum one second 
         return complete; 
         }); // wait for procedure_result
@@ -198,9 +198,9 @@ void ODriveCanNode::ctrl_msg_callback() {
     frame.can_id = node_id_ << 5 | kSetControllerMode;
     {
         std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
-        write_le<uint32_t>(ctrl_msg_.control_mode, frame.data);
-        write_le<uint32_t>(ctrl_msg_.input_mode,   frame.data + 4);
-        control_mode = ctrl_msg_.control_mode;
+        write_le<uint32_t>(ctrl_msg_.control_mode.mode, frame.data);
+        write_le<uint32_t>(ctrl_msg_.input_mode.mode,   frame.data + 4);
+        control_mode = ctrl_msg_.control_mode.mode;
     }
     frame.len = 8;
     can_intf_.send_can_frame(frame);
