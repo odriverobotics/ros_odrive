@@ -1,77 +1,72 @@
-# ROS2 Package for ODrive Pro/S1 
+# ROS2 Package for ODrive
 
-This repository contains the development of a ROS2 node intended for communication with ODrive Pro/S1 devices over the CAN interface.
+This repository contains a ROS2 node intended for communication with ODrive motor controllers via CAN bus.
 
-For information about installation, prerequisites, and getting started, checkout the official ODrive [ROS CAN Package](https://docs.odriverobotics.com/v/latest/guides/ros-package.html) Guide.
+For information about installation, prerequisites, and getting started, checkout the ODrive [ROS CAN Package Guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html).
+
+Compatible Devices:
+
+- [ODrive Pro](https://odriverobotics.com/shop/odrive-pro)
+- [ODrive S1](https://odriverobotics.com/shop/odrive-s1)
+- [ODrive Micro](https://odriverobotics.com/shop/odrive-micro)
+
+(not compatible with ODrive 3.x)
+
+System Requirements:
+
+- Ubuntu >= 20.04
+- ROS2 >= Humble
+
 
 ## Interface
-### Nodes
-#### odrive_can_node
 
-This node is designed to interface with the ODrive Pro/S1 series of motor controllers over the CAN bus.
+### Parameters
 
-* subscribes to: `/control_message` ([ControlMessage](#controlmessage))
+* `node_id`: The node_id of the device this node will attach to
+* `interface`: the network interface name for the can bus
 
-* publishes: 
-    * `/odrive_status` ([ODriveStatus](#odrivestatus))
-    * `/controller_status` ([ControllerStatus](#controllerstatus))
+### Subscribes to
 
-* service: `/request_axis_state` ([AxisState](#axisstate))
+* `/control_message`: Input setpoints for the ODrive.
 
-* parameters:
+  The ODrive will interpret the values of input_pos, input_vel and input_torque depending on the control mode. 
 
-    * `node_id`: The node_id of the device this node will attach to
-    * `interface`: the network interface name for the can bus
+  For example: In velocity control mode (2) input_pos is ignored, and input_torque is used as a feedforward term.
 
-### Messages
+  **Note:** When changing `input_mode` or `control_mode`, it is advised to set the ODrive to IDLE before doing so. Changing these values during CLOSED_LOOP_CONTROL is not advised.
 
-#### ControlMessage
+### Publishes
 
-Exposes the minimal set of inputs to use an ODrive. 
+* `/odrive_status`: Provides ODrive/system level status updates.
 
-**important** Make sure the ODrive returns to IDLE before changing the input_mode, changing this value during CLOSED_LOOP_CONTROL is not advised.
+  For this topic to work, the ODrive must be configured with the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages) enabled:
 
-The ODrive will interpret the values of input_pos, input_vel and input_torque depending on the control mode. 
+  - `error_msg_rate_ms`
+  - `temperature_msg_rate_ms`
+  - `bus_voltage_msg_rate_ms`
 
-For example: In velocity control mode (2) input_pos is ignored, and input_torque is used as a feedforward term.
+  The ROS node will wait until one of each of these CAN messages has arrived before it emits a message on the `odrive_status` topic. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
 
-#### ODriveStatus
+* `/controller_status`: Provides Controller level status updates. 
 
-Provides ODrive/system level status updates. 
-Requires setting a non-zero period for the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages)
+  For this topic to work, the ODrive must be configured with the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages) enabled:
 
-`error_msg_rate_ms`
+  - `heartbeat_msg_rate_ms`
+  - `encoder_msg_rate_ms`
+  - `iq_msg_rate_ms`
+  - `torques_msg_rate_ms`
 
-`temperature_msg_rate_ms`
-
-`bus_voltage_msg_rate_ms`
-
-**note** Each published message will wait for a new value from these endpoints. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
-
-#### ControllerStatus
-
-Provides Controller level status updates. 
-Requires setting a non-zero period for the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages)
-
-`heartbeat_msg_rate_ms`
-
-`encoder_msg_rate_ms`
-
-`iq_msg_rate_ms`
-
-`torques_msg_rate_ms`
-
-**note** Each published message will wait for a new value from these endpoints. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
+  The ROS node will wait until one of each of these CAN messages has arrived before it emits a message on the `controller_status` topic. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
 
 ### Services
 
-#### AxisState
+* `/request_axis_state`: Sets the axes requested state.
 
-Sets the axes requested state. This service requires regular heartbeat messages to determine the procedure result and will block until the procedure completes, with a minimum call time of 1 second.
+  This service requires regular heartbeat messages from the ODrive to determine the procedure result and will block until the procedure completes, with a minimum call time of 1 second.
 
-### Datatypes
+### Data Types
 
-All of the Message/Service fields are directly related to their corresponding CAN message. For more detailed information about each type, and how to interpet the data, please refer to the [ODrive CAN protocol documentation](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#messages)
+All of the Message/Service fields are directly related to their corresponding CAN message. For more detailed information about each type, and how to interpet the data, please refer to the [ODrive CAN protocol documentation](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#messages).
 
 ## Using Python Enums
 
@@ -85,3 +80,20 @@ In the meantime, here is how you can use the [odrive python package](https://pyp
     ctrl_stat = ControllerStatus()
     ... # receive message data
     print(ProcedureResult(ctrl_stat.procedure_result))
+
+
+## Developer Notes
+
+For user instructions, see [this guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html) instead.
+
+You can build this node on a non-ROS developer PC by using the DevContainer configurations in this repository. For example with VSCode:
+
+1. Clone repository
+2. Open the repository folder in VSCode. It should automatically present an option "Reopen in Dev Container". Click on that and select the desired ROS version.
+3. Once it's re-opened, in the VSCode terminal, run:
+
+   ```
+   colcon build --packages-select odrive_can
+   source ./install/setup.bash
+   ```
+4. Running the node requires hardware access and only works if the container host is Linux.
