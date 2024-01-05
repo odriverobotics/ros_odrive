@@ -1,0 +1,46 @@
+name: ROS Build Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ros-version: [humble, iron]
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ matrix.ros-version }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.ros-version }}
+      
+      - name: Build docker image
+        run: |
+          docker buildx build \
+            --tag local:${{ matrix.ros-version }} \
+            --load \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache \
+            --file .devcontainer/${{ matrix.ros-version }}/Dockerfile .
+
+      - name: Adjust permissions
+        run: |
+          docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} sudo chown -R vscode:vscode /workspace
+
+      - name: Run colcon build
+        run: |
+          docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} colcon build --packages-select odrive_can
