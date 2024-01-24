@@ -15,7 +15,7 @@ bool SocketCanIntf::init(const std::string& interface, EpollEventLoop* event_loo
     interface_ = interface;
     event_loop_ = event_loop;
     frame_processor_ = std::move(frame_processor);
-    socket_id_ = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    socket_id_ = socket(PF_CAN, SOCK_RAW | SOCK_NONBLOCK, CAN_RAW);
     if (socket_id_ == -1) {
         std::cerr << "Failed to create socket" << std::endl;
         return false;
