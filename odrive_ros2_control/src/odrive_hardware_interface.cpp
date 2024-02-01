@@ -256,6 +256,11 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
             }
 
             // Set axis state
+            Clear_Errors_msg_t msg1;
+            msg1.Identify = 0;
+            axis.send(msg1);
+
+            // Set axis state
             Set_Axis_State_msg_t msg2;
             msg2.Axis_Requested_State = any_enabled ? AXIS_STATE_CLOSED_LOOP_CONTROL : AXIS_STATE_IDLE;
             axis.send(msg2);
