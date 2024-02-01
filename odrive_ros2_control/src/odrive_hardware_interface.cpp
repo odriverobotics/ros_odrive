@@ -313,7 +313,7 @@ void Axis::on_can_msg(const rclcpp::Time&, const can_frame& frame) {
     uint8_t cmd = frame.can_id & 0x1f;
 
     auto try_decode = [&]<typename TMsg>(TMsg& msg) {
-        if (frame.len < Get_Encoder_Estimates_msg_t::msg_length) {
+        if (frame.can_dlc < Get_Encoder_Estimates_msg_t::msg_length) {
             RCLCPP_WARN(rclcpp::get_logger("ODriveHardwareInterface"), "message %d too short", cmd);
             return false;
         }
