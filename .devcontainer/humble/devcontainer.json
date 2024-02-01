@@ -11,7 +11,8 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-vscode.cpptools"
+        "ms-vscode.cpptools",
+        "eamodio.gitlens"
       ]
     }
   }
