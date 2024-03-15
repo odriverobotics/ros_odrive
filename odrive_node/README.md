@@ -50,6 +50,10 @@ For information about installation, prerequisites and getting started, check out
 
   This service requires regular heartbeat messages from the ODrive to determine the procedure result and will block until the procedure completes, with a minimum call time of 1 second.
 
+* `/clear_errors`: Clears disarm_reason and procedure_result and re-arms the brake resistor if applicable
+
+  If the axis dropped into IDLE because of an error, clearing the errors does not put the axis back into CLOSED_LOOP_CONTROL. To do so, you must request CLOSED_LOOP_CONTROL again explicitly.
+
 ### Data Types
 
 All of the Message/Service fields are directly related to their corresponding CAN message. For more detailed information about each type, and how to interpet the data, please refer to the [ODrive CAN protocol documentation](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#messages).
