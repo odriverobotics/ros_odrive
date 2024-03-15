@@ -15,12 +15,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ControllerStatus.msg"
   "msg/ODriveStatus.msg"
   "srv/AxisState.srv"
+  "srv/ClearErrors.srv"
 )
 ament_export_dependencies(rosidl_default_runtime)
 
 include_directories(include)
 
-add_executable(odrive_can_node 
+add_executable(odrive_can_node
   src/epoll_event_loop.cpp
   src/socket_can.cpp
   src/odrive_can_node.cpp

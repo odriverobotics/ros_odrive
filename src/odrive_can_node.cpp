@@ -17,6 +17,7 @@ enum CmdId : uint32_t {
     kGetTemp,                      // SystemStatus      - publisher
     kGetBusVoltageCurrent = 0x017, // SystemStatus      - publisher
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
+    kClearErrors = 0x018,          // ClearErrors       - service
 };
 
 enum ControlMode : uint64_t {
@@ -27,13 +28,13 @@ enum ControlMode : uint64_t {
 };
 
 ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_name) {
-    
+
     rclcpp::Node::declare_parameter<std::string>("interface", "can0");
     rclcpp::Node::declare_parameter<uint16_t>("node_id", 0);
 
     rclcpp::QoS ctrl_stat_qos(rclcpp::KeepAll{});
     ctrl_publisher_ = rclcpp::Node::create_publisher<ControllerStatus>("controller_status", ctrl_stat_qos);
-    
+
     rclcpp::QoS odrv_stat_qos(rclcpp::KeepAll{});
     odrv_publisher_ = rclcpp::Node::create_publisher<ODriveStatus>("odrive_status", odrv_stat_qos);
 
@@ -42,6 +43,9 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
+
+    rclcpp::QoS srv_clear_errors_qos(rclcpp::KeepAll{});
+    service_clear_errors_ = rclcpp::Node::create_service<ClearErrors>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos.get_rmw_qos_profile());
 }
 
 void ODriveCanNode::deinit() {
@@ -65,6 +69,10 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     }
     if (!srv_evt_.init(event_loop, std::bind(&ODriveCanNode::request_state_callback, this))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize service event");
+        return false;
+    }
+    if (!srv_clear_errors_evt_.init(event_loop, std::bind(&ODriveCanNode::request_clear_errors_callback, this))) {
+        RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize clear errors service event");
         return false;
     }
     RCLCPP_INFO(rclcpp::Node::get_logger(), "node_id: %d", node_id_);
@@ -133,7 +141,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             ctrl_stat_.torque_target   = read_le<float>(frame.data + 0);
             ctrl_stat_.torque_estimate = read_le<float>(frame.data + 4);
-            ctrl_pub_flag_ |= 0b1000; 
+            ctrl_pub_flag_ |= 0b1000;
             break;
         }
         default: {
@@ -141,12 +149,12 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
     }
-    
+
     if (ctrl_pub_flag_ == 0b1111) {
         ctrl_publisher_->publish(ctrl_stat_);
         ctrl_pub_flag_ = 0;
     }
-    
+
     if (odrv_pub_flag_ == 0b111) {
         odrv_publisher_->publish(odrv_stat_);
         odrv_pub_flag_ = 0;
@@ -171,13 +179,30 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
     auto call_time = std::chrono::steady_clock::now();
     fresh_heartbeat_.wait(guard, [this, &call_time]() {
         bool complete = (this->ctrl_stat_.procedure_result != 1) && // make sure procedure_result is not busy
-            (std::chrono::steady_clock::now() - call_time >= std::chrono::seconds(1)); // wait for minimum one second 
-        return complete; 
+            (std::chrono::steady_clock::now() - call_time >= std::chrono::seconds(1)); // wait for minimum one second
+        return complete;
         }); // wait for procedure_result
-    
+
     response->axis_state = ctrl_stat_.axis_state;
     response->active_errors = ctrl_stat_.active_errors;
     response->procedure_result = ctrl_stat_.procedure_result;
+}
+
+void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<ClearErrors::Request> request, std::shared_ptr<ClearErrors::Response> response) {
+    {
+        std::unique_lock<std::mutex> guard(clear_errors_mutex_);
+        identify_ = request->identify;
+        RCLCPP_INFO(rclcpp::Node::get_logger(), "clearing errors identify: %d", identify_);
+    }
+    srv_clear_errors_evt_.set();
+
+    std::unique_lock<std::mutex> guard(ctrl_stat_mutex_); // define lock for controller status
+    auto call_time = std::chrono::steady_clock::now();
+    fresh_heartbeat_.wait(guard, [this, &call_time]() {
+        bool complete = (this->ctrl_stat_.procedure_result != 1) && // make sure procedure_result is not busy
+            (std::chrono::steady_clock::now() - call_time >= std::chrono::seconds(1)); // wait for minimum one second
+        return complete;
+        }); // wait for procedure_result
 }
 
 void ODriveCanNode::request_state_callback() {
@@ -186,6 +211,17 @@ void ODriveCanNode::request_state_callback() {
     {
         std::unique_lock<std::mutex> guard(axis_state_mutex_);
         write_le<uint32_t>(axis_state_, frame.data);
+    }
+    frame.can_dlc = 4;
+    can_intf_.send_can_frame(frame);
+}
+
+void ODriveCanNode::request_clear_errors_callback() {
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
+    {
+        std::unique_lock<std::mutex> guard(axis_state_mutex_);
+        write_le<uint8_t>(identify_, frame.data);
     }
     frame.can_dlc = 4;
     can_intf_.send_can_frame(frame);
@@ -204,7 +240,7 @@ void ODriveCanNode::ctrl_msg_callback() {
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
-    
+
     frame = can_frame{};
     switch (control_mode) {
         case ControlMode::kVoltageControl: {
@@ -237,8 +273,8 @@ void ODriveCanNode::ctrl_msg_callback() {
             write_le<int8_t>(((int8_t)((ctrl_msg_.input_torque) * 1000)), frame.data + 6);
             frame.can_dlc = 8;
             break;
-        }    
-        default: 
+        }
+        default:
             RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported control_mode: %d", control_mode);
             return;
     }
