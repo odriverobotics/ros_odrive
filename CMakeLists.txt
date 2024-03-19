@@ -9,13 +9,13 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(std_srvs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ControlMessage.msg"
   "msg/ControllerStatus.msg"
   "msg/ODriveStatus.msg"
   "srv/AxisState.srv"
-  "srv/ClearErrors.srv"
 )
 ament_export_dependencies(rosidl_default_runtime)
 
@@ -30,6 +30,7 @@ add_executable(odrive_can_node
 
 ament_target_dependencies(odrive_can_node
   rclcpp
+  std_srvs
 )
 
 target_compile_features(odrive_can_node PRIVATE cxx_std_20)

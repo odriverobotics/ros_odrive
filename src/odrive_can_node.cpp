@@ -45,7 +45,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
 
     rclcpp::QoS srv_clear_errors_qos(rclcpp::KeepAll{});
-    service_clear_errors_ = rclcpp::Node::create_service<ClearErrors>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos.get_rmw_qos_profile());
+    service_clear_errors_ = rclcpp::Node::create_service<Empty>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos.get_rmw_qos_profile());
 }
 
 void ODriveCanNode::deinit() {
@@ -188,21 +188,9 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
     response->procedure_result = ctrl_stat_.procedure_result;
 }
 
-void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<ClearErrors::Request> request, std::shared_ptr<ClearErrors::Response> response) {
-    {
-        std::unique_lock<std::mutex> guard(clear_errors_mutex_);
-        identify_ = request->identify;
-        RCLCPP_INFO(rclcpp::Node::get_logger(), "clearing errors identify: %d", identify_);
-    }
+void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response) {
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "clearing errors");
     srv_clear_errors_evt_.set();
-
-    std::unique_lock<std::mutex> guard(ctrl_stat_mutex_); // define lock for controller status
-    auto call_time = std::chrono::steady_clock::now();
-    fresh_heartbeat_.wait(guard, [this, &call_time]() {
-        bool complete = (this->ctrl_stat_.procedure_result != 1) && // make sure procedure_result is not busy
-            (std::chrono::steady_clock::now() - call_time >= std::chrono::seconds(1)); // wait for minimum one second
-        return complete;
-        }); // wait for procedure_result
 }
 
 void ODriveCanNode::request_state_callback() {
@@ -219,11 +207,8 @@ void ODriveCanNode::request_state_callback() {
 void ODriveCanNode::request_clear_errors_callback() {
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
-    {
-        std::unique_lock<std::mutex> guard(axis_state_mutex_);
-        write_le<uint8_t>(identify_, frame.data);
-    }
-    frame.can_dlc = 4;
+    write_le<uint8_t>(0, frame.data);
+    frame.can_dlc = 1;
     can_intf_.send_can_frame(frame);
 }
 
