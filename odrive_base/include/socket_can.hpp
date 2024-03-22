@@ -15,6 +15,7 @@ public:
     void deinit();
     bool send_can_frame(const can_frame& frame);
 
+    bool read_nonblocking();
 private:
     std::string interface_;
     int socket_id_ = -1;
@@ -24,7 +25,6 @@ private:
     bool broken_ = false;
 
     void on_socket_event(uint32_t mask);
-    bool read_nonblocking();
     void process_can_frame(const can_frame& frame) {
         frame_processor_(frame);
     }

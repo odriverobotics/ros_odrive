@@ -43,4 +43,6 @@ jobs:
 
       - name: Run colcon build
         run: |
-          docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} colcon build --packages-select odrive_can
+          docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} \
+            /bin/bash -c "rosdep install --from-paths odrive_ros2_control odrive_botwheel_explorer -y --ignore-src && \
+            colcon build"

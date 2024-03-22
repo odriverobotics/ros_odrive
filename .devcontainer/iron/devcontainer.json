@@ -7,7 +7,13 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
   "workspaceFolder": "/${localWorkspaceFolderBasename}",
-  "mounts": [
-    
-  ]
+  "mounts": [],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "eamodio.gitlens"
+      ]
+    }
+  }
 }
