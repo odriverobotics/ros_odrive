@@ -55,9 +55,9 @@ struct Axis {
     uint32_t node_id_;
 
     // Commands (ros2_control => ODrives)
-    double pos_setpoint_ = 0.0f;
-    double vel_setpoint_ = 0.0f;
-    double torque_setpoint_ = 0.0f;
+    double pos_setpoint_ = 0.0f; // [rad]
+    double vel_setpoint_ = 0.0f; // [rad/s]
+    double torque_setpoint_ = 0.0f; // [Nm]
 
     // State (ODrives => ros2_control)
     // rclcpp::Time encoder_estimates_timestamp_;
@@ -65,12 +65,12 @@ struct Axis {
     // uint8_t axis_state_ = 0;
     // uint8_t procedure_result_ = 0;
     // uint8_t trajectory_done_flag_ = 0;
-    double pos_estimate_ = NAN;
-    double vel_estimate_ = NAN;
+    double pos_estimate_ = NAN; // [rad]
+    double vel_estimate_ = NAN; // [rad/s]
     // double iq_setpoint_ = NAN;
     // double iq_measured_ = NAN;
-    double torque_target_ = NAN;
-    double torque_estimate_ = NAN;
+    double torque_target_ = NAN; // [Nm]
+    double torque_estimate_ = NAN; // [Nm]
     // uint32_t active_errors_ = 0;
     // uint32_t disarm_reason_ = 0;
     // double fet_temperature_ = NAN;
@@ -285,13 +285,13 @@ return_type ODriveHardwareInterface::write(const rclcpp::Time&, const rclcpp::Du
         // Send the CAN message that fits the set of enabled setpoints
         if (axis.pos_input_enabled_) {
             Set_Input_Pos_msg_t msg;
-            msg.Input_Pos = axis.pos_setpoint_;
-            msg.Vel_FF = axis.vel_input_enabled_ ? axis.vel_setpoint_ : 0.0f;
+            msg.Input_Pos = axis.pos_setpoint_ / (2 * M_PI);
+            msg.Vel_FF = axis.vel_input_enabled_ ? (axis.vel_setpoint_  / (2 * M_PI)) : 0.0f;
             msg.Torque_FF = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0f;
             axis.send(msg);
         } else if (axis.vel_input_enabled_) {
             Set_Input_Vel_msg_t msg;
-            msg.Input_Vel = axis.vel_setpoint_;
+            msg.Input_Vel = axis.vel_setpoint_ / (2 * M_PI);
             msg.Input_Torque_FF = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0f;
             axis.send(msg);
         } else if (axis.torque_input_enabled_) {
@@ -329,8 +329,8 @@ void Axis::on_can_msg(const rclcpp::Time&, const can_frame& frame) {
     switch (cmd) {
         case Get_Encoder_Estimates_msg_t::cmd_id: {
             if (Get_Encoder_Estimates_msg_t msg; try_decode(msg)) {
-                pos_estimate_ = msg.Pos_Estimate;
-                vel_estimate_ = msg.Vel_Estimate;
+                pos_estimate_ = msg.Pos_Estimate * (2 * M_PI);
+                vel_estimate_ = msg.Vel_Estimate * (2 * M_PI);
             }
         } break;
         case Get_Torques_msg_t::cmd_id: {
