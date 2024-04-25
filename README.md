@@ -2,10 +2,10 @@
 
 This repository contains ROS2 packages for the [ODrive motor controller](https://odriverobotics.com):
 
-- **`odrive_node`**: Standalone ROS2 node for communication with ODrives via CAN bus. → [More info](odrive_node/README)
+- **`odrive_node`**: Standalone ROS2 node for communication with ODrives via CAN bus. → [More info](odrive_node/README.md)
 - **`odrive_ros2_control`**: [work in progress] [ros2_control](https://control.ros.org/master/index.html) integration for communication with ODrives via CAN bus.
- → [More info](odrive_ros2_control/README)
-- **`odrive_botwheel_explorer`**: Example for using the `odrive_ros2_control` package in the context of the [ODrive BotWheel Explorer](https://odriverobotics.com/shop/botwheel-explorer). → [More info](odrive_botwheel_explorer/README)
+ → [More info](odrive_ros2_control/README.md)
+- **`odrive_botwheel_explorer`**: Example for using the `odrive_ros2_control` package in the context of the [ODrive BotWheel Explorer](https://odriverobotics.com/shop/botwheel-explorer). → [More info](odrive_botwheel_explorer/README.md)
 
 `odrive_node` and `odrive_ros2_control` are two alternative approaches and cannot be used at the same time.
 
