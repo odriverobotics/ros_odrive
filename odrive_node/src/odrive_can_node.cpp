@@ -2,7 +2,7 @@
 #include "epoll_event_loop.hpp"
 #include "byte_swap.hpp"
 #include <sys/eventfd.h>
-#include <chrono>
+#include <chrono> 
 
 enum CmdId : uint32_t {
     kHeartbeat = 0x001,            // ControllerStatus  - publisher
@@ -50,23 +50,33 @@ void ODriveCanNode::deinit() {
     can_intf_.deinit();
 }
 
+
+// initializes the node
 bool ODriveCanNode::init(EpollEventLoop* event_loop) {
 
+    // gets the node id and the can interface as variables
     node_id_ = rclcpp::Node::get_parameter("node_id").as_int();
     std::string interface = rclcpp::Node::get_parameter("interface").as_string();
 
+    // sets up the can callback function
     if (!can_intf_.init(interface, event_loop, std::bind(&ODriveCanNode::recv_callback, this, _1))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize socket can interface: %s", interface.c_str());
         return false;
     }
+
+    // sets up the control msg callback function
     if (!sub_evt_.init(event_loop, std::bind(&ODriveCanNode::ctrl_msg_callback, this))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize subscriber event");
         return false;
     }
+
+    // sets up the callback for requesting the state of the ordrive using the service call
     if (!srv_evt_.init(event_loop, std::bind(&ODriveCanNode::request_state_callback, this))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize service event");
         return false;
     }
+
+
     RCLCPP_INFO(rclcpp::Node::get_logger(), "node_id: %d", node_id_);
     RCLCPP_INFO(rclcpp::Node::get_logger(), "interface: %s", interface.c_str());
     return true;
@@ -75,6 +85,11 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
 void ODriveCanNode::recv_callback(const can_frame& frame) {
 
     if(((frame.can_id >> 5) & 0x3F) != node_id_) return;
+
+
+    // checks the lower 5 bits of the can_id which store the cmd_id
+    // 
+
 
     switch(frame.can_id & 0x1F) {
         case CmdId::kHeartbeat: {
@@ -248,7 +263,7 @@ void ODriveCanNode::ctrl_msg_callback() {
 
 inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
     bool valid = expected == length;
-    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "received %s", name.c_str());
+    RCLCPP_DEBUG(rclcpp::Node::get_loggeran_event_loop([&eve(), "received %s", name.c_str());
     if (!valid) RCLCPP_WARN(rclcpp::Node::get_logger(), "Incorrect %s frame length: %d != %d", name.c_str(), length, expected);
     return valid;
 }

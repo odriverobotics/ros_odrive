@@ -39,7 +39,7 @@ private:
     
     uint16_t node_id_;
     SocketCanIntf can_intf_ = SocketCanIntf();
-    
+     
     short int ctrl_pub_flag_ = 0;
     std::mutex ctrl_stat_mutex_;
     ControllerStatus ctrl_stat_ = ControllerStatus();
