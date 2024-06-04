@@ -1,4 +1,4 @@
-# ROS2 Package for ODrive
+# TAMU fork of the ROS2 Package for ODrive
 
 This repository contains ROS2 packages for the [ODrive motor controller](https://odriverobotics.com):
 
