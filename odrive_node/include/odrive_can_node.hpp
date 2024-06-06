@@ -22,6 +22,12 @@ using ODriveStatus = odrive_can::msg::ODriveStatus;
 using ControllerStatus = odrive_can::msg::ControllerStatus;
 using ControlMessage = odrive_can::msg::ControlMessage;
 
+// TESTING START
+
+using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
+
+// TESTING END
+
 using AxisState = odrive_can::srv::AxisState;
 
 class ODriveCanNode : public rclcpp::Node {
@@ -60,6 +66,16 @@ private:
     std::mutex axis_state_mutex_;
     std::condition_variable fresh_heartbeat_;
     rclcpp::Service<AxisState>::SharedPtr service_;
+
+
+    // TESTING START
+
+    short int odrv_advanced_pub_flag_ = 0;
+    std::mutex odrv_advanced_stat_mutex_;
+    ODriveStatusAdvanced odrv_advanced_stat_ = ODriveStatusAdvanced();
+    rclcpp::Publisher<ODriveStatusAdvanced>::SharedPtr odrv_advanced_publisher_;
+
+    // TESTING END
 
 };
 

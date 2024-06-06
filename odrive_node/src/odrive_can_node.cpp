@@ -42,6 +42,14 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
+
+    // TESTING START
+
+    rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepAll{});
+    odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
+
+    // TESTING END
+
 }
 
 void ODriveCanNode::deinit() {
@@ -88,7 +96,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
 
     // checks the lower 5 bits of the can_id which store the cmd_id
-    // 
+    // ost → ODrive
 
 
     switch(frame.can_id & 0x1F) {
@@ -109,6 +117,15 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.active_errors = read_le<uint32_t>(frame.data + 0);
             odrv_stat_.disarm_reason = read_le<uint32_t>(frame.data + 4);
             odrv_pub_flag_ |= 0b001;
+
+            // TESTING START
+            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.active_errors = odrv_stat_.active_errors;
+            odrv_advanced_stat_.disarm_reason = odrv_stat_.disarm_reason;
+            odrv_advanced_pub_flag_ |= 0b001;
+            // TESTING END
+
+            
             break;
         }
         case CmdId::kGetEncoderEstimates: {
@@ -133,6 +150,14 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.fet_temperature   = read_le<float>(frame.data + 0);
             odrv_stat_.motor_temperature = read_le<float>(frame.data + 4);
             odrv_pub_flag_ |= 0b010;
+
+
+            // TESTING START
+            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.fet_temperature = odrv_stat_.fet_temperature;
+            odrv_advanced_stat_.motor_temperature = odrv_stat_.motor_temperature;
+            odrv_advanced_pub_flag_ |= 0b010;
+            // TESTING END
             break;
         }
         case CmdId::kGetBusVoltageCurrent: {
@@ -141,6 +166,14 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
             odrv_pub_flag_ |= 0b100;
+
+
+            // TESTING START
+            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.bus_voltage = odrv_stat_.bus_voltage;
+            odrv_advanced_stat_.bus_current = odrv_stat_.bus_current;
+            odrv_advanced_pub_flag_ |= 0b100;
+            // TESTING END
             break;
         }
         case CmdId::kGetTorques: {
@@ -166,6 +199,15 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         odrv_publisher_->publish(odrv_stat_);
         odrv_pub_flag_ = 0;
     }
+
+    // TESTING START
+    if (odrv_advanced_pub_flag_ == 0b111) {
+        odrv_advanced_stat_.is_metric = false;
+        odrv_advanced_publisher_->publish(odrv_advanced_stat_);
+        odrv_advanced_pub_flag_ = 0;
+    }
+
+    // TESTING END
 }
 
 void ODriveCanNode::subscriber_callback(const ControlMessage::SharedPtr msg) {
