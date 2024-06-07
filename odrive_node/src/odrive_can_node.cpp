@@ -303,6 +303,70 @@ void ODriveCanNode::ctrl_msg_callback() {
     can_intf_.send_can_frame(frame);
 }
 
+
+
+// TESTING START
+// Trying to send an advanced control message
+
+
+void ODriveCanNode::advanced_ctrl_msg_callback() {
+
+    uint32_t control_mode;
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kSetControllerMode;
+    {
+        std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
+        write_le<uint32_t>(ctrl_msg_.control_mode, frame.data);
+        write_le<uint32_t>(ctrl_msg_.input_mode,   frame.data + 4);
+        control_mode = ctrl_msg_.control_mode;
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
+    
+    frame = can_frame{};
+    switch (control_mode) {
+        case ControlMode::kVoltageControl: {
+            RCLCPP_ERROR(rclcpp::Node::get_logger(), "Voltage Control Mode (0) is not currently supported");
+            return;
+        }
+        case ControlMode::kTorqueControl: {
+            RCLCPP_DEBUG(rclcpp::Node::get_logger(), "input_torque");
+            frame.can_id = node_id_ << 5 | kSetInputTorque;
+            std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
+            write_le<float>(ctrl_msg_.input_torque, frame.data);
+            frame.can_dlc = 4;
+            break;
+        }
+        case ControlMode::kVelocityControl: {
+            RCLCPP_DEBUG(rclcpp::Node::get_logger(), "input_vel");
+            frame.can_id = node_id_ << 5 | kSetInputVel;
+            std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
+            write_le<float>(ctrl_msg_.input_vel,       frame.data);
+            write_le<float>(ctrl_msg_.input_torque, frame.data + 4);
+            frame.can_dlc = 8;
+            break;
+        }
+        case ControlMode::kPositionControl: {
+            RCLCPP_DEBUG(rclcpp::Node::get_logger(), "input_pos");
+            frame.can_id = node_id_ << 5 | kSetInputPos;
+            std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
+            write_le<float>(ctrl_msg_.input_pos,  frame.data);
+            write_le<int8_t>(((int8_t)((ctrl_msg_.input_vel) * 1000)),    frame.data + 4);
+            write_le<int8_t>(((int8_t)((ctrl_msg_.input_torque) * 1000)), frame.data + 6);
+            frame.can_dlc = 8;
+            break;
+        }    
+        default: 
+            RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported control_mode: %d", control_mode);
+            return;
+    }
+
+    can_intf_.send_can_frame(frame);
+}
+
+
+// TESTING END
+
 inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
     bool valid = expected == length;
     RCLCPP_DEBUG(rclcpp::Node::get_loggeran_event_loop([&eve(), "received %s", name.c_str());
