@@ -74,6 +74,25 @@ private:
     std::condition_variable fresh_heartbeat_;
     rclcpp::Service<AxisState>::SharedPtr service_;
 
+    //TESTING START
+    // std::mutex gains_msg_mutex_;
+    // ControlGains gains_msg_ = ControlGains();
+    // rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
+
+    //TESTING END
+
+
+
+
+    // TESTING START
+
+    short int odrv_advanced_pub_flag_ = 0;
+    std::mutex odrv_advanced_stat_mutex_;
+    ODriveStatusAdvanced odrv_advanced_stat_ = ODriveStatusAdvanced();
+    rclcpp::Publisher<ODriveStatusAdvanced>::SharedPtr odrv_advanced_publisher_;
+
+    // TESTING END
+
 };
 
 #endif // ODRIVE_CAN_NODE_HPP
