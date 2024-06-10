@@ -304,7 +304,7 @@ void ODriveCanNode::ctrl_msg_callback() {
 // Trying to send an advanced control message
 
 
-void ODriveCanNode::control_gains_callback() {
+void ODriveCanNode::control_gains_callback(const ControlMessage::SharedPtr msg) {
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS FEEDBACK!!!");
 
