@@ -108,7 +108,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_pub_flag_ |= 0b001;
 
             // TESTING START
-            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.active_errors = odrv_stat_.active_errors;
             odrv_advanced_stat_.disarm_reason = odrv_stat_.disarm_reason;
             odrv_advanced_pub_flag_ |= 0b001;
@@ -141,7 +141,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_pub_flag_ |= 0b010;
 
             // TESTING START
-            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.fet_temperature = odrv_stat_.fet_temperature;
             odrv_advanced_stat_.motor_temperature = odrv_stat_.motor_temperature;
             odrv_advanced_pub_flag_ |= 0b010;
@@ -156,7 +156,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_pub_flag_ |= 0b100;
 
             // TESTING START
-            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.bus_voltage = odrv_stat_.bus_voltage;
             odrv_advanced_stat_.bus_current = odrv_stat_.bus_current;
             odrv_advanced_pub_flag_ |= 0b100;
