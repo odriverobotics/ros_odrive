@@ -16,6 +16,12 @@ enum CmdId : uint32_t {
     kGetIq = 0x014,                // ControllerStatus  - publisher
     kGetTemp,                      // SystemStatus      - publisher
     kGetBusVoltageCurrent = 0x017, // SystemStatus      - publisher
+
+    // TESTING START
+    // Allowing input gains
+    kSetVelGains = 0x01b,
+    // TESTING END
+    
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
 };
 
