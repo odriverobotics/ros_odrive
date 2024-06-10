@@ -55,8 +55,8 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepAll{});
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
-    // rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
-    // gains_subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+    rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
+    gains_subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
 
 
     // TESTING END
@@ -306,16 +306,18 @@ void ODriveCanNode::ctrl_msg_callback() {
 
 void ODriveCanNode::control_gains_callback() {
 
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS FEEDBACK!!!");
 
-    struct can_frame frame;
-    frame.can_id = node_id_ << 5 | kSetVelGains;
-    {
-        std::lock_guard<std::mutex> guard(gains_msg_mutex_);
-        write_le<uint32_t>(gains_msg_.vel_gain, frame.data);
-        write_le<uint32_t>(gains_msg_.vel_integrator_gain,   frame.data + 4);
-    }
-    frame.can_dlc = 8;
-    can_intf_.send_can_frame(frame);
+
+    // struct can_frame frame;
+    // frame.can_id = node_id_ << 5 | kSetVelGains;
+    // {
+    //     std::lock_guard<std::mutex> guard(gains_msg_mutex_);
+    //     write_le<uint32_t>(gains_msg_.vel_gain, frame.data);
+    //     write_le<uint32_t>(gains_msg_.vel_integrator_gain,   frame.data + 4);
+    // }
+    // frame.can_dlc = 8;
+    // can_intf_.send_can_frame(frame);
     
     
 }
