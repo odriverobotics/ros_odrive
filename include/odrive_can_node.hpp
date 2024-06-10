@@ -10,7 +10,7 @@
 
 // TESTING START
 #include "odrive_can/msg/o_drive_status_advanced.hpp"
-// #include "odrive_can/msg/control_gains.hpp"
+#include "odrive_can/msg/control_gains.hpp"
 // TESTING END
 
 #include <mutex>
@@ -31,7 +31,7 @@ using ControlMessage = odrive_can::msg::ControlMessage;
 
 using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
 
-// using ControlGains = odrive_can::msg::ODriveStatusAdvanced;
+using ControlGains = odrive_can::msg::ODriveStatusAdvanced;
 
 // TESTING END
 
