@@ -55,6 +55,10 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepAll{});
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
+    // rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
+    // gains_subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+
+
     // TESTING END
 
 }

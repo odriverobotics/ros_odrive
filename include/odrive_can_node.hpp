@@ -31,7 +31,8 @@ using ControlMessage = odrive_can::msg::ControlMessage;
 
 using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
 
-using ControlGains = odrive_can::msg::ODriveStatusAdvanced;
+using ControlGains = odrive_can::msg::ControlGains;
+
 
 // TESTING END
 
