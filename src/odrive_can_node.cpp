@@ -42,6 +42,15 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
+
+    // TESTING START
+
+    
+    rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepAll{});
+    odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
+
+    // TESTING END
+
 }
 
 void ODriveCanNode::deinit() {
