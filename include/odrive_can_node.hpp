@@ -48,6 +48,9 @@ private:
     void service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response);
     void request_state_callback();
     void ctrl_msg_callback();
+    // TESTING START
+    void control_gains_callback();
+    // TESTING END
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
     
     uint16_t node_id_;
