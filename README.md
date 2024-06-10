@@ -1,17 +1,10 @@
-# TAMU fork of the [ROS2 Package for ODrive](https://github.com/odriverobotics/ros_odrive/tree/00940442a34e55ef206f4d62f91e4980812d9984)
+# ROS2 Package for ODrive
 
-This repository contains ROS2 packages for the [ODrive motor controller](https://odriverobotics.com):
+This repository contains a ROS2 node intended for communication with ODrive motor controllers via CAN bus.
 
-- **`odrive_node`**: Standalone ROS2 node for communication with ODrives via CAN bus. → [More info](odrive_node/README.md)
-- **`odrive_ros2_control`**: [work in progress] [ros2_control](https://control.ros.org/master/index.html) integration for communication with ODrives via CAN bus.
- → [More info](odrive_ros2_control/README.md)
-- **`odrive_botwheel_explorer`**: Example for using the `odrive_ros2_control` package in the context of the [ODrive BotWheel Explorer](https://odriverobotics.com/shop/botwheel-explorer). → [More info](odrive_botwheel_explorer/README.md)
+For information about installation, prerequisites, and getting started, checkout the ODrive [ROS CAN Package Guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html).
 
-`odrive_node` and `odrive_ros2_control` are two alternative approaches and cannot be used at the same time.
-
-For information about installation, prerequisites and getting started, check out the ODrive [ROS CAN Package Guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html).
-
-## Compatible Devices
+Compatible Devices:
 
 - [ODrive Pro](https://odriverobotics.com/shop/odrive-pro)
 - [ODrive S1](https://odriverobotics.com/shop/odrive-s1)
@@ -19,14 +12,79 @@ For information about installation, prerequisites and getting started, check out
 
 (not compatible with ODrive 3.x)
 
-## System Requirements
+System Requirements:
 
 - Ubuntu >= 20.04
 - ROS2 >= Humble
 
+
+## Interface
+
+### Parameters
+
+* `node_id`: The node_id of the device this node will attach to
+* `interface`: the network interface name for the can bus
+
+### Subscribes to
+
+* `/control_message`: Input setpoints for the ODrive.
+
+  The ODrive will interpret the values of input_pos, input_vel and input_torque depending on the control mode. 
+
+  For example: In velocity control mode (2) input_pos is ignored, and input_torque is used as a feedforward term.
+
+  **Note:** When changing `input_mode` or `control_mode`, it is advised to set the ODrive to IDLE before doing so. Changing these values during CLOSED_LOOP_CONTROL is not advised.
+
+### Publishes
+
+* `/odrive_status`: Provides ODrive/system level status updates.
+
+  For this topic to work, the ODrive must be configured with the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages) enabled:
+
+  - `error_msg_rate_ms`
+  - `temperature_msg_rate_ms`
+  - `bus_voltage_msg_rate_ms`
+
+  The ROS node will wait until one of each of these CAN messages has arrived before it emits a message on the `odrive_status` topic. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
+
+* `/controller_status`: Provides Controller level status updates. 
+
+  For this topic to work, the ODrive must be configured with the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages) enabled:
+
+  - `heartbeat_msg_rate_ms`
+  - `encoder_msg_rate_ms`
+  - `iq_msg_rate_ms`
+  - `torques_msg_rate_ms`
+
+  The ROS node will wait until one of each of these CAN messages has arrived before it emits a message on the `controller_status` topic. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
+
+### Services
+
+* `/request_axis_state`: Sets the axes requested state.
+
+  This service requires regular heartbeat messages from the ODrive to determine the procedure result and will block until the procedure completes, with a minimum call time of 1 second.
+
+### Data Types
+
+All of the Message/Service fields are directly related to their corresponding CAN message. For more detailed information about each type, and how to interpet the data, please refer to the [ODrive CAN protocol documentation](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#messages).
+
+## Using Python Enums
+
+**Python Example Node coming soon!**
+
+In the meantime, here is how you can use the [odrive python package](https://pypi.org/project/odrive/) to display the enums:
+
+    from odrive_can.msgs import ControllerStatus # remember to include odrive_can as a package dependency
+    from odrive.enums import ProcedureResult
+    ... # Node setup
+    ctrl_stat = ControllerStatus()
+    ... # receive message data
+    print(ProcedureResult(ctrl_stat.procedure_result))
+
+
 ## Developer Notes
 
-(For user instructions, see [this guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html) instead.)
+For user instructions, see [this guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html) instead.
 
 You can build this node on a non-ROS developer PC by using the DevContainer configurations in this repository. For example with VSCode:
 
@@ -34,7 +92,7 @@ You can build this node on a non-ROS developer PC by using the DevContainer conf
 2. Open the repository folder in VSCode. It should automatically present an option "Reopen in Dev Container". Click on that and select the desired ROS version.
 3. Once it's re-opened, in the VSCode terminal, run:
 
-   ```bash
+   ```
    colcon build --packages-select odrive_can
    source ./install/setup.bash
    ```

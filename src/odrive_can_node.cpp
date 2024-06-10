@@ -2,7 +2,7 @@
 #include "epoll_event_loop.hpp"
 #include "byte_swap.hpp"
 #include <sys/eventfd.h>
-#include <chrono> 
+#include <chrono>
 
 enum CmdId : uint32_t {
     kHeartbeat = 0x001,            // ControllerStatus  - publisher
@@ -16,13 +16,6 @@ enum CmdId : uint32_t {
     kGetIq = 0x014,                // ControllerStatus  - publisher
     kGetTemp,                      // SystemStatus      - publisher
     kGetBusVoltageCurrent = 0x017, // SystemStatus      - publisher
-
-    // TESTING START
-    // Allowing input gains
-    kSetVelGains = 0x01b,
-    // TESTING END
-
-
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
 };
 
@@ -44,18 +37,11 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS odrv_stat_qos(rclcpp::KeepAll{});
     odrv_publisher_ = rclcpp::Node::create_publisher<ODriveStatus>("odrive_status", odrv_stat_qos);
 
-     
+    rclcpp::QoS ctrl_msg_qos(rclcpp::KeepAll{});
+    subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_message", ctrl_msg_qos, std::bind(&ODriveCanNode::subscriber_callback, this, _1));
+
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
-
-    // TESTING START
-
-    
-    rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepAll{});
-    odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
-
-    // TESTING END
-
 }
 
 void ODriveCanNode::deinit() {
@@ -64,33 +50,23 @@ void ODriveCanNode::deinit() {
     can_intf_.deinit();
 }
 
-
-// initializes the node
 bool ODriveCanNode::init(EpollEventLoop* event_loop) {
 
-    // gets the node id and the can interface as variables
     node_id_ = rclcpp::Node::get_parameter("node_id").as_int();
     std::string interface = rclcpp::Node::get_parameter("interface").as_string();
 
-    // sets up the can callback function
     if (!can_intf_.init(interface, event_loop, std::bind(&ODriveCanNode::recv_callback, this, _1))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize socket can interface: %s", interface.c_str());
         return false;
     }
-
-    // sets up the control msg callback function
     if (!sub_evt_.init(event_loop, std::bind(&ODriveCanNode::ctrl_msg_callback, this))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize subscriber event");
         return false;
     }
-
-    // sets up the callback for requesting the state of the ordrive using the service call
     if (!srv_evt_.init(event_loop, std::bind(&ODriveCanNode::request_state_callback, this))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize service event");
         return false;
     }
-
-
     RCLCPP_INFO(rclcpp::Node::get_logger(), "node_id: %d", node_id_);
     RCLCPP_INFO(rclcpp::Node::get_logger(), "interface: %s", interface.c_str());
     return true;
@@ -99,11 +75,6 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
 void ODriveCanNode::recv_callback(const can_frame& frame) {
 
     if(((frame.can_id >> 5) & 0x3F) != node_id_) return;
-
-
-    // checks the lower 5 bits of the can_id which store the cmd_id
-    // ost → ODrive
-
 
     switch(frame.can_id & 0x1F) {
         case CmdId::kHeartbeat: {
@@ -123,15 +94,6 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.active_errors = read_le<uint32_t>(frame.data + 0);
             odrv_stat_.disarm_reason = read_le<uint32_t>(frame.data + 4);
             odrv_pub_flag_ |= 0b001;
-
-            // TESTING START
-            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
-            odrv_advanced_stat_.active_errors = odrv_stat_.active_errors;
-            odrv_advanced_stat_.disarm_reason = odrv_stat_.disarm_reason;
-            odrv_advanced_pub_flag_ |= 0b001;
-            // TESTING END
-
-            
             break;
         }
         case CmdId::kGetEncoderEstimates: {
@@ -156,14 +118,6 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.fet_temperature   = read_le<float>(frame.data + 0);
             odrv_stat_.motor_temperature = read_le<float>(frame.data + 4);
             odrv_pub_flag_ |= 0b010;
-
-
-            // TESTING START
-            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
-            odrv_advanced_stat_.fet_temperature = odrv_stat_.fet_temperature;
-            odrv_advanced_stat_.motor_temperature = odrv_stat_.motor_temperature;
-            odrv_advanced_pub_flag_ |= 0b010;
-            // TESTING END
             break;
         }
         case CmdId::kGetBusVoltageCurrent: {
@@ -172,14 +126,6 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
             odrv_pub_flag_ |= 0b100;
-
-
-            // TESTING START
-            std::lock_guard<std::mutex> guard(odrv_advanced_stat_mutex_);
-            odrv_advanced_stat_.bus_voltage = odrv_stat_.bus_voltage;
-            odrv_advanced_stat_.bus_current = odrv_stat_.bus_current;
-            odrv_advanced_pub_flag_ |= 0b100;
-            // TESTING END
             break;
         }
         case CmdId::kGetTorques: {
@@ -205,15 +151,6 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         odrv_publisher_->publish(odrv_stat_);
         odrv_pub_flag_ = 0;
     }
-
-    // TESTING START
-    if (odrv_advanced_pub_flag_ == 0b111) {
-        odrv_advanced_stat_.is_metric = false;
-        odrv_advanced_publisher_->publish(odrv_advanced_stat_);
-        odrv_advanced_pub_flag_ = 0;
-    }
-
-    // TESTING END
 }
 
 void ODriveCanNode::subscriber_callback(const ControlMessage::SharedPtr msg) {
@@ -309,34 +246,9 @@ void ODriveCanNode::ctrl_msg_callback() {
     can_intf_.send_can_frame(frame);
 }
 
-
-
-// TESTING START
-// Trying to send an advanced control message
-
-
-// void ODriveCanNode::control_gains_callback() {
-
-
-//     struct can_frame frame;
-//     frame.can_id = node_id_ << 5 | kSetVelGains;
-//     {
-//         std::lock_guard<std::mutex> guard(gains_msg_mutex_);
-//         write_le<uint32_t>(gains_msg_.vel_gain, frame.data);
-//         write_le<uint32_t>(gains_msg_.vel_integrator_gain,   frame.data + 4);
-//     }
-//     frame.can_dlc = 8;
-//     can_intf_.send_can_frame(frame);
-    
-    
-// }
-
-
-// TESTING END
-
 inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
     bool valid = expected == length;
-    RCLCPP_DEBUG(rclcpp::Node::get_loggeran_event_loop([&eve(), "received %s", name.c_str());
+    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "received %s", name.c_str());
     if (!valid) RCLCPP_WARN(rclcpp::Node::get_logger(), "Incorrect %s frame length: %d != %d", name.c_str(), length, expected);
     return valid;
 }

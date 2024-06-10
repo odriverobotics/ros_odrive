@@ -1,6 +1,4 @@
+# colcon output
 /build/
 /install/
 /log/
-
-# Python
-__pycache__/

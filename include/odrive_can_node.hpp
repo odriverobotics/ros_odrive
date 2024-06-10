@@ -8,11 +8,6 @@
 #include "odrive_can/srv/axis_state.hpp"
 #include "socket_can.hpp"
 
-// TESTING START
-#include "odrive_can/msg/o_drive_status_advanced.hpp"
-// #include "odrive_can/msg/control_gains.hpp"
-// TESTING END
-
 #include <mutex>
 #include <condition_variable>
 #include <array>
@@ -26,14 +21,6 @@ using std::placeholders::_2;
 using ODriveStatus = odrive_can::msg::ODriveStatus;
 using ControllerStatus = odrive_can::msg::ControllerStatus;
 using ControlMessage = odrive_can::msg::ControlMessage;
-
-// TESTING START
-
-using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
-
-// using ControlGains = odrive_can::msg::ODriveStatusAdvanced;
-
-// TESTING END
 
 using AxisState = odrive_can::srv::AxisState;
 
@@ -52,7 +39,7 @@ private:
     
     uint16_t node_id_;
     SocketCanIntf can_intf_ = SocketCanIntf();
-     
+    
     short int ctrl_pub_flag_ = 0;
     std::mutex ctrl_stat_mutex_;
     ControllerStatus ctrl_stat_ = ControllerStatus();
@@ -73,29 +60,6 @@ private:
     std::mutex axis_state_mutex_;
     std::condition_variable fresh_heartbeat_;
     rclcpp::Service<AxisState>::SharedPtr service_;
-
-
-
-
-
-    //TESTING START
-    // std::mutex gains_msg_mutex_;
-    // ControlGains gains_msg_ = ControlGains();
-    // rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
-
-    //TESTING END
-
-
-
-
-    // TESTING START
-
-    short int odrv_advanced_pub_flag_ = 0;
-    std::mutex odrv_advanced_stat_mutex_;
-    ODriveStatusAdvanced odrv_advanced_stat_ = ODriveStatusAdvanced();
-    rclcpp::Publisher<ODriveStatusAdvanced>::SharedPtr odrv_advanced_publisher_;
-
-    // TESTING END
 
 };
 
