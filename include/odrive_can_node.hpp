@@ -75,9 +75,9 @@ private:
     rclcpp::Service<AxisState>::SharedPtr service_;
 
     //TESTING START
-    // std::mutex gains_msg_mutex_;
-    // ControlGains gains_msg_ = ControlGains();
-    // rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
+    std::mutex gains_msg_mutex_;
+    ControlGains gains_msg_ = ControlGains();
+    rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
 
     //TESTING END
 

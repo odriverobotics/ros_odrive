@@ -21,7 +21,7 @@ enum CmdId : uint32_t {
     // Allowing input gains
     kSetVelGains = 0x01b,
     // TESTING END
-    
+
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
 };
 
@@ -295,6 +295,29 @@ void ODriveCanNode::ctrl_msg_callback() {
 
     can_intf_.send_can_frame(frame);
 }
+
+// TESTING START
+// Trying to send an advanced control message
+
+
+void ODriveCanNode::control_gains_callback() {
+
+
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kSetVelGains;
+    {
+        std::lock_guard<std::mutex> guard(gains_msg_mutex_);
+        write_le<uint32_t>(gains_msg_.vel_gain, frame.data);
+        write_le<uint32_t>(gains_msg_.vel_integrator_gain,   frame.data + 4);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
+    
+    
+}
+
+
+// TESTING END
 
 inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
     bool valid = expected == length;
