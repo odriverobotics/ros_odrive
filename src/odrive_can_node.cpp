@@ -56,7 +56,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
-    gains_subscriber_ = rclcpp::Node::create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+    gains_subscriber_ = this->create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, std::placeholders::_1));
 
 
     // TESTING END
@@ -163,7 +163,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
-            odrv_pub_flag_ |= 0b100;
+            odrv_pub_ControlGainsflag_ |= 0b100;
 
             // TESTING START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
