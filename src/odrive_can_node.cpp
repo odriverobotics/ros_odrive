@@ -131,7 +131,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             if (!verify_length("kGetEncoderEstimates", 8, frame.can_dlc)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             ctrl_stat_.pos_estimate = read_le<float>(frame.data + 0);
-            ctrl_stat_.vel_estimate = read_le<floconst odrive_can::msg::ControlGains::SharedPtr msgat>(frame.data + 4);
+            ctrl_stat_.vel_estimate = read_le<float>(frame.data + 4);
             ctrl_pub_flag_ |= 0b0010;
             break;
         }
@@ -163,7 +163,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
-            odrv_pub_ControlGainsflag_ |= 0b100;
+            oodrv_pub_flag_ |= 0b100;
 
             // TESTING START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
