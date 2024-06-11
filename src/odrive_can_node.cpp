@@ -315,7 +315,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
     frame.can_id = node_id_ << 5 | kSetVelGains;
     {
         std::lock_guard<std::mutex> guard(gains_msg_mutex_);
-        write_le<uint32_t>(gmsg->vel_gain, frame.data);
+        write_le<uint32_t>(msg->vel_gain, frame.data);
         write_le<uint32_t>(msg->vel_integrator_gain,   frame.data + 4);
     }
     frame.can_dlc = 8;
