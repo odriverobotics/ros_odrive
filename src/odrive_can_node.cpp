@@ -311,15 +311,15 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
     RCLCPP_ERROR(rclcpp::Node::get_logger(), "vel integrator gain: %f", msg->vel_integrator_gain);
 
 
-    // struct can_frame frame;
-    // frame.can_id = node_id_ << 5 | kSetVelGains;
-    // {
-    //     std::lock_guard<std::mutex> guard(gains_msg_mutex_);
-    //     write_le<uint32_t>(gains_msg_.vel_gain, frame.data);
-    //     write_le<uint32_t>(gains_msg_.vel_integrator_gain,   frame.data + 4);
-    // }
-    // frame.can_dlc = 8;
-    // can_intf_.send_can_frame(frame);
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kSetVelGains;
+    {
+        std::lock_guard<std::mutex> guard(gains_msg_mutex_);
+        write_le<uint32_t>(gmsg->vel_gain, frame.data);
+        write_le<uint32_t>(msg->vel_integrator_gain,   frame.data + 4);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
     
     
 }
