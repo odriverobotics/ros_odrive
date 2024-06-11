@@ -5,8 +5,24 @@
 #include <chrono>
 
 enum CmdId : uint32_t {
+    // TESTING START
+    kGet_Version = 0x000,
+    // TESTING END
+
     kHeartbeat = 0x001,            // ControllerStatus  - publisher
+
+    // TESTING START
+    kEstop = 0x002,
+    // TESTING END
+
     kGetError = 0x003,             // SystemStatus      - publisher
+
+    // TESTING START
+    kRxSdo = 0x004,
+    kTxSdo = 0x005,
+    kAddress = 0x006,
+    // TESTING END
+
     kSetAxisState = 0x007,         // SetAxisState      - service
     kGetEncoderEstimates = 0x009,  // ControllerStatus  - publisher
     kSetControllerMode = 0x00b,    // ControlMessage    - subscriber
