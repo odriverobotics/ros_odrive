@@ -26,9 +26,12 @@ enum CmdId : uint32_t {
     kSetAxisState = 0x007,         // SetAxisState      - service
     kGetEncoderEstimates = 0x009,  // ControllerStatus  - publisher
     kSetControllerMode = 0x00b,    // ControlMessage    - subscriber
-    kSetInputPos,                  // ControlMessage    - subscriber
-    kSetInputVel,                  // ControlMessage    - subscriber
-    kSetInputTorque,               // ControlMessage    - subscriber
+    kSetInputPos = 0x00c,                  // ControlMessage    - subscriber
+    kSetInputVel = 0x00d,                  // ControlMessage    - subscriber
+    kSetInputTorque = 0x00e,               // ControlMessage    - subscriber
+    // TESTING START
+    kSetLimits = 0x00f,
+    // TESTING END
     kGetIq = 0x014,                // ControllerStatus  - publisher
     kGetTemp,                      // SystemStatus      - publisher
     kGetBusVoltageCurrent = 0x017, // SystemStatus      - publisher
