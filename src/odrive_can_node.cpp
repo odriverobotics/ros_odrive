@@ -56,7 +56,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
-    gains_subscriber_ = this->create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, std::placeholders::_1));
+    gains_subscriber_ = rclcpp::Node::create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
 
 
     // TESTING END
@@ -131,7 +131,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             if (!verify_length("kGetEncoderEstimates", 8, frame.can_dlc)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             ctrl_stat_.pos_estimate = read_le<float>(frame.data + 0);
-            ctrl_stat_.vel_estimate = read_le<float>(frame.data + 4);
+            ctrl_stat_.vel_estimate = read_le<floconst odrive_can::msg::ControlGains::SharedPtr msgat>(frame.data + 4);
             ctrl_pub_flag_ |= 0b0010;
             break;
         }

@@ -50,7 +50,7 @@ private:
     void request_state_callback();
     void ctrl_msg_callback();
     // TESTING START
-    void control_gains_callback();
+    void control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg);
     // TESTING END
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
     
