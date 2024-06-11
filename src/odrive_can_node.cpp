@@ -308,7 +308,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS FEEDBACK!!!");
     RCLCPP_ERROR(rclcpp::Node::get_logger(), msg->vel_gain);
-    RCLCPP_ERROR(rclcpp::Node::get_logger(), "vel integrator gain: %d", msg->vel_integrator_gain);
+    // RCLCPP_ERROR(rclcpp::Node::get_logger(), "vel integrator gain: %d", msg->vel_integrator_gain);
 
 
     // struct can_frame frame;
