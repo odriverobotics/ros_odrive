@@ -320,6 +320,8 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
+
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS UPDATED!!!");
     
     
 }
