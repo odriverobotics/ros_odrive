@@ -151,7 +151,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.active_errors    = read_le<uint32_t>(frame.data + 0);
             ctrl_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
             ctrl_stat_.procedure_result  = read_le<uint8_t>(frame.data + 5);
-            ctrl_stagainst_.trajectory_done_flag = read_le<bool>(frame.data + 6);
+            ctrl_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
             ctrl_pub_flag_ |= 0b0001;
             fresh_heartbeat_.notify_one();
             break;
