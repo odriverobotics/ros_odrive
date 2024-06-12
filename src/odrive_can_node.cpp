@@ -416,42 +416,49 @@ void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess
                     // bool
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was bool");
                     write_le<bool>(msg->bool_value,   frame.data + 4);
+                    break;
                     
                 }
                 case 1: {
                     // float32
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was float32");
-                    write_le<float>(msg->float_value,   frame.data + 4);
+                    write_le<float>(msg->float32_value,   frame.data + 4);
+                    break;
                    
                 }
                 case 2: {
                     // int32
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
                     write_le<int32_t>(msg->int32_value,   frame.data + 4);
+                    break;
 
                 }
                 case 3: {
                     // uint64
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
                     write_le<uint64_t>(msg->uint64_value,   frame.data + 4);
+                    break;
 
                 }    
                 case 4: {
                     // uint32
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
                     write_le<uint32_t>(msg->uint32_value,   frame.data + 4);
+                    break;
 
                 }
                 case 5: {
                     // uint16
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
                     write_le<uint16_t>(msg->uint16_value,   frame.data + 4);
+                    break;
 
                 }
                 case 6: {
                     // uint8
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
                     write_le<uint8_t>(msg->uint8_value,   frame.data + 4);
+                    break;
 
                 }
                 default: 
