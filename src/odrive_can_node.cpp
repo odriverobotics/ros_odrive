@@ -232,6 +232,9 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         case CmdId::kTxSdo: {
             if (!verify_length("kTxSdo", 8, frame.can_dlc)) break;
             std::lock_guard<std::mutex> guard(value_access_response_msg_mutex_);
+            value_access_response_msg_ = ValueAccess();
+
+            value_access_response_msg_.data_type_specifier = data_type_specifier_request;
 
             // reads in the correct datatype
             switch (data_type_specifier_request) {
