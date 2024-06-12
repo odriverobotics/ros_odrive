@@ -395,7 +395,7 @@ void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "SETTING VALUE or GETTTING VALUE");
     RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", msg->opcode);
-    RCLCPP_ERROR(rclcpp::Node::get_logger(), "value: %f", msg->float_value);
+    RCLCPP_ERROR(rclcpp::Node::get_logger(), "value: %f", msg->value);
 
 
     struct can_frame frame;
@@ -404,7 +404,7 @@ void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess
         std::lock_guard<std::mutex> guard(value_access_request_msg_mutex_);
         write_le<uint8_t>(msg->opcode, frame.data);
         write_le<uint16_t>(msg->endpoint_id, frame.data + 1);
-        write_le<float>(msg->float_value,   frame.data + 4);
+        write_le<float>(msg->value,   frame.data + 4);
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
