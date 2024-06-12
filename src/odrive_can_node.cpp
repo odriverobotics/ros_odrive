@@ -286,7 +286,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
                 }
                 default: 
-                    RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", msg->data_type_specifier);
+                    RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", data_type_specifier_request);
                     return;
             }   
 
