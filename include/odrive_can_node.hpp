@@ -96,7 +96,7 @@ private:
 
 
     std::mutex value_access_request_msg_mutex_;
-    alueAccess value_access_request_msg_ = ValueAccess();
+    ValueAccess value_access_request_msg_ = ValueAccess();
     rclcpp::Subscription<ValueAccess>::SharedPtr value_access_subscriber_;
 
 
