@@ -398,15 +398,16 @@ void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess
     RCLCPP_ERROR(rclcpp::Node::get_logger(), "value: %f", msg->float_value);
 
 
-    // struct can_frame frame;
-    // frame.can_id = node_id_ << 5 | kSetVelGains;
-    // {
-    //     std::lock_guard<std::mutex> guard(gains_msg_mutex_);
-    //     write_le<float>(msg->vel_gain, frame.data);
-    //     write_le<float>(msg->vel_integrator_gain,   frame.data + 4);
-    // }
-    // frame.can_dlc = 8;
-    // can_intf_.send_can_frame(frame);
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kRxSdo;
+    {
+        std::lock_guard<std::mutex> guard(value_access_request_msg_mutex_);
+        write_le<uint8_t>(msg->opcode, frame.data);
+        write_le<uint16_t>(msg->endpoint_id, frame.data + 1);
+        write_le<float>(msg->float_value,   frame.data + 4);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "END OF SETTING VALUE CALLBACK!!!");
     
