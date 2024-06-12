@@ -1,4 +1,10 @@
 uint8 opcode 
 uint16 endpoint_id
-uint32 value
-float32 float_value
+uint32 data_type_specifier
+bool bool_value
+float32 float32_value
+int32 int32_value
+uint64 uint64_value
+uint32 uint32_value
+uint16 uint16_value
+uint8 uint8_value

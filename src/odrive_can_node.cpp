@@ -395,7 +395,7 @@ void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "SETTING VALUE or GETTTING VALUE");
     RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", msg->opcode);
-    RCLCPP_ERROR(rclcpp::Node::get_logger(), "value: %f", msg->value);
+    RCLCPP_ERROR(rclcpp::Node::get_logger(), "value: %f", msg->float_value);
 
 
     struct can_frame frame;
@@ -404,7 +404,66 @@ void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess
         std::lock_guard<std::mutex> guard(value_access_request_msg_mutex_);
         write_le<uint8_t>(msg->opcode, frame.data);
         write_le<uint16_t>(msg->endpoint_id, frame.data + 1);
-        write_le<float>(msg->value,   frame.data + 4);
+        if(msg->opcode == 0){
+            // If the message is asking to read a value then don't write the value to CAN
+        }else if(msg->opcode == 1) {
+            // If the message is asking to write a value then handle that
+
+
+            switch (msg->data_type_specifier) {
+
+                case 0: {
+                    // bool
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was bool");
+                    write_le<bool>(msg->bool_value,   frame.data + 4);
+                    
+                }
+                case 1: {
+                    // float32
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was float32");
+                    write_le<float>(msg->float_value,   frame.data + 4);
+                   
+                }
+                case 2: {
+                    // int32
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+                    write_le<int32_t>(msg->int32_value,   frame.data + 4);
+
+                }
+                case 3: {
+                    // uint64
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
+                    write_le<uint64_t>(msg->uint64_value,   frame.data + 4);
+
+                }    
+                case 4: {
+                    // uint32
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
+                    write_le<uint32_t>(msg->uint32_value,   frame.data + 4);
+
+                }
+                case 5: {
+                    // uint16
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
+                    write_le<uint16_t>(msg->uint16_value,   frame.data + 4);
+
+                }
+                case 6: {
+                    // uint8
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
+                    write_le<uint8_t>(msg->uint8_value,   frame.data + 4);
+
+                }
+                default: 
+                    RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", msg->data_type_specifier);
+                    return;
+            }   
+            
+
+
+
+        }
+        
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
