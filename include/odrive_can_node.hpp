@@ -94,6 +94,8 @@ private:
     ValueAccess value_access_response_msg_ = ValueAccess();
     rclcpp::Publisher<ValueAccess>::SharedPtr value_access_response_publisher_;
 
+    uint32_t data_type_specifier_request;
+
 
     std::mutex value_access_request_msg_mutex_;
     ValueAccess value_access_request_msg_ = ValueAccess();
