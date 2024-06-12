@@ -391,7 +391,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
 // Trying to send a value access msg
 
 
-void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAcess::SharedPtr msg) {
+void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess::SharedPtr msg) {
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "SETTING VALUE or GETTTING VALUE");
     RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", msg->opcode);
