@@ -232,7 +232,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         case CmdId::kTxSdo: {
             if (!verify_length("kTxSdo", 8, frame.can_dlc)) break;
             std::lock_guard<std::mutex> guard(value_access_response_msg_mutex_);
-            value_access_response_msg_.float_value   = read_le<float>(frame.data + 4);
+            value_access_response_msg_.float32_value   = read_le<float>(frame.data + 4);
             value_access_response_publisher_->publish(value_access_response_msg_);
             break;
         }
