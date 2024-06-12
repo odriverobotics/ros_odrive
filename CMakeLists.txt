@@ -16,8 +16,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ODriveStatus.msg"
   "msg/ODriveStatusAdvanced.msg"
   "msg/ControlGains.msg"
-  "srv/AxisState.srv"
   "msg/ValueAccess.msg"
+  "srv/AxisState.srv"
+  
 )
 ament_export_dependencies(rosidl_default_runtime)
 
