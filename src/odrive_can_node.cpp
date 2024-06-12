@@ -239,49 +239,49 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
                 case 0: {
                     // bool
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was bool");
-                    value_access_response_msg_.bool_value   = read_le<bool>(msg->bool_value,   frame.data + 4);
+                    value_access_response_msg_.bool_value   = read_le<bool>(frame.data + 4);
                     break;
                     
                 }
                 case 1: {
                     // float32
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was float32");
-                    value_access_response_msg_.float32_value   = read_le<float>(msg->float32_value,   frame.data + 4);
+                    value_access_response_msg_.float32_value   = read_le<float>(frame.data + 4);
                     break;
                    
                 }
                 case 2: {
                     // int32
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was int32");
-                    value_access_response_msg_.int32_value   = read_le<int32_t>(msg->int32_value,   frame.data + 4);
+                    value_access_response_msg_.int32_value   = read_le<int32_t>(frame.data + 4);
                     break;
 
                 }
                 case 3: {
                     // uint64
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was uint64");
-                    value_access_response_msg_.uint64_value   = read_le<uint64_t>(msg->uint64_value,   frame.data + 4);
+                    value_access_response_msg_.uint64_value   = read_le<uint64_t>(frame.data + 4);
                     break;
 
                 }    
                 case 4: {
                     // uint32
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was uint32");
-                    value_access_response_msg_.uint32_value   = read_le<uint32_t>(msg->uint32_value,   frame.data + 4);
+                    value_access_response_msg_.uint32_value   = read_le<uint32_t>(frame.data + 4);
                     break;
 
                 }
                 case 5: {
                     // uint16
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was uint16");
-                    value_access_response_msg_.unit16_value   = read_le<uint16_t>(msg->uint16_value,   frame.data + 4);
+                    value_access_response_msg_.unit16_value   = read_le<uint16_t>(frame.data + 4);
                     break;
 
                 }
                 case 6: {
                     // uint8
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was uint8");
-                    value_access_response_msg_.uint8_value   = read_le<uint8_t>(msg->uint8_value,   frame.data + 4);
+                    value_access_response_msg_.uint8_value   = read_le<uint8_t>(frame.data + 4);
                     break;
 
                 }
