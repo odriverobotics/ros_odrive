@@ -31,19 +31,37 @@ enum CmdId : uint32_t {
     kSetInputTorque = 0x00e,               // ControlMessage    - subscriber
     // TESTING START
     kSetLimits = 0x00f,
+    kSetTrajVelLimit = 0x011,
+    kSetTrajAccelLimit = 0x012,
+    kSetTragInertia = 0x013,
     // TESTING END
     kGetIq = 0x014,                // ControllerStatus  - publisher
-    kGetTemp,                      // SystemStatus      - publisher
+    kGetTemp = 0x015,                      // SystemStatus      - publisher
+    
+    // TESTING START
+    kReboot = 0x016,
+
+    // TESTING END
+
     kGetBusVoltageCurrent = 0x017, // SystemStatus      - publisher
 
 
 
     // TESTING START
-    // Allowing input gains
-    kSetVelGains = 0x01b,
+
+    kClearErrors = 0x018,
+    kSetAbsolutePostion = 0x019,
+    kSetPosGain = 0x01a,    
+   
+    kSetVelGains = 0x01b,           //ControlGains - Subscriber
     // TESTING END
 
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
+
+    // TESTING START
+    kGetPowers = 0x01d,
+    kEnterDFUMode = 0x01f,
+    // TESTING END
 };
 
 enum ControlMode : uint64_t {
@@ -78,6 +96,9 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
     gains_subscriber_ = rclcpp::Node::create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+
+    rclcpp::QoS value_access_response_qos(rclcpp::KeepAll{});
+    value_access_response_publisher_ = rclcpp::Node::create_publisher<ValueAccess>("value_access_response", value_access_response_qos);
 
 
     // TESTING END
@@ -184,7 +205,6 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
-            odrv_pub_flag_ |= 0b100;
 
             // TESTING START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
@@ -202,6 +222,18 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_pub_flag_ |= 0b1000; 
             break;
         }
+
+        // TESTING START
+
+        case CmdId::kTxSdo: {
+            if (!verify_length("kTxSdo", 8, frame.can_dlc)) break;
+            std::lock_guard<std::mutex> guard(value_access_response_mutex_);
+            value_access_response_msg_.float_value   = read_le<float>(frame.data + 4);
+            value_access_response_publisher_->publish(value_access_response_msg_);
+            break;
+        }
+
+        // TESTING END
         default: {
             RCLCPP_WARN(rclcpp::Node::get_logger(), "Received unused message: ID = 0x%x", (frame.can_id & 0x1F));
             break;

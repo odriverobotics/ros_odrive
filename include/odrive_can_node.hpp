@@ -11,6 +11,7 @@
 // TESTING START
 #include "odrive_can/msg/o_drive_status_advanced.hpp"
 #include "odrive_can/msg/control_gains.hpp"
+#include "odrive_can/msg/value_access.hpp"
 // TESTING END
 
 #include <mutex>
@@ -32,6 +33,8 @@ using ControlMessage = odrive_can::msg::ControlMessage;
 using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
 
 using ControlGains = odrive_can::msg::ControlGains;
+
+using ValueAccess = odrive_can::msg::ValueAccess;
 
 
 // TESTING END
@@ -82,6 +85,13 @@ private:
     std::mutex gains_msg_mutex_;
     ControlGains gains_msg_ = ControlGains();
     rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
+
+
+    std::mutex value_access_response_msg_mutex_;
+    ValueAccess value_access_response_msg_ = ValueAccess();
+    rclcpp::Publisher<ValueAccess>::SharedPtr value_access_response_publisher_;
+
+
 
     //TESTING END
 
