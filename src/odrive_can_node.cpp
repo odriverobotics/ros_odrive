@@ -100,6 +100,10 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS value_access_response_qos(rclcpp::KeepAll{});
     value_access_response_publisher_ = rclcpp::Node::create_publisher<ValueAccess>("value_access_response", value_access_response_qos);
 
+    rclcpp::QoS value_access_subscriber_qos(rclcpp::KeepAll{});
+    value_access_subscriber_ = rclcpp::Node::create_subscription<ValueAccess>("value_access_request", gains_subscriber_qos, std::bind(&ODriveCanNode::value_access_set_callback, this, _1));
+
+
 
     // TESTING END
 
@@ -147,7 +151,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.active_errors    = read_le<uint32_t>(frame.data + 0);
             ctrl_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
             ctrl_stat_.procedure_result  = read_le<uint8_t>(frame.data + 5);
-            ctrl_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
+            ctrl_stagainst_.trajectory_done_flag = read_le<bool>(frame.data + 6);
             ctrl_pub_flag_ |= 0b0001;
             fresh_heartbeat_.notify_one();
             break;
@@ -375,6 +379,36 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
     can_intf_.send_can_frame(frame);
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS UPDATED!!!");
+    
+    
+}
+
+
+// TESTING END
+
+
+// TESTING START
+// Trying to send a value access msg
+
+
+void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAcess::SharedPtr msg) {
+
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "SETTING VALUE or GETTTING VALUE");
+    RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", msg->opcode);
+    RCLCPP_ERROR(rclcpp::Node::get_logger(), "value: %f", msg->float_value);
+
+
+    // struct can_frame frame;
+    // frame.can_id = node_id_ << 5 | kSetVelGains;
+    // {
+    //     std::lock_guard<std::mutex> guard(gains_msg_mutex_);
+    //     write_le<float>(msg->vel_gain, frame.data);
+    //     write_le<float>(msg->vel_integrator_gain,   frame.data + 4);
+    // }
+    // frame.can_dlc = 8;
+    // can_intf_.send_can_frame(frame);
+
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "END OF SETTING VALUE CALLBACK!!!");
     
     
 }
