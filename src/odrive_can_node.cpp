@@ -263,7 +263,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
                 case 3: {
                     // uint64
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "read value type was uint64");
-                    value_access_response_msg_.uint64_value   = read_le<int64_t>(frame.data + 4);
+                    value_access_response_msg_.int64_value   = read_le<int64_t>(frame.data + 4);
                     break;
 
                 }    
@@ -500,7 +500,7 @@ void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess
                 case 3: {
                     // uint64
                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
-                    write_le<int64_t>(msg->uint64_value,   frame.data + 4);
+                    write_le<int64_t>(msg->int64_value,   frame.data + 4);
                     break;
 
                 }    
