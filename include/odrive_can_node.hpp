@@ -56,7 +56,7 @@ private:
     // TESTING START
     void control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg);
     // void value_access_set_callback(const odrive_can::msg::ValueAccess::SharedPtr msg);
-    void value_access_service_callback(const std::shared_ptr<ValueAccessData::Request> request, std::shared_ptr<ValueAccessData::Response> response);
+    void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
 
     
     // TESTING END
