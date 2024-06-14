@@ -12,6 +12,7 @@
 #include "odrive_can/msg/o_drive_status_advanced.hpp"
 #include "odrive_can/msg/control_gains.hpp"
 #include "odrive_can/msg/value_access.hpp"
+#include "odrive_can_node/srv/value_access_data.hpp"
 // TESTING END
 
 #include <mutex>
@@ -34,7 +35,7 @@ using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
 
 using ControlGains = odrive_can::msg::ControlGains;
 
-using ValueAccess = odrive_can::msg::ValueAccess;
+using ValueAccess = odrive_can::srv::ValueAccessData;
 
 
 // TESTING END
@@ -54,7 +55,8 @@ private:
     void ctrl_msg_callback();
     // TESTING START
     void control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg);
-    void value_access_set_callback(const odrive_can::msg::ValueAccess::SharedPtr msg);
+    // void value_access_set_callback(const odrive_can::msg::ValueAccess::SharedPtr msg);
+    void value_access_service_callback(const std::shared_ptr<ValueAccessData::Request> request, std::shared_ptr<ValueAccessData::Response> response);
 
     
     // TESTING END
@@ -90,16 +92,27 @@ private:
     rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
 
 
-    std::mutex value_access_response_msg_mutex_;
-    ValueAccess value_access_response_msg_ = ValueAccess();
-    rclcpp::Publisher<ValueAccess>::SharedPtr value_access_response_publisher_;
+    // std::mutex value_access_response_msg_mutex_;
+    // ValueAccess value_access_response_msg_ = ValueAccess();
+    // rclcpp::Publisher<ValueAccess>::SharedPtr value_access_response_publisher_;
 
-    uint32_t data_type_specifier_request;
+    // uint32_t data_type_specifier_request;
 
 
-    std::mutex value_access_request_msg_mutex_;
-    ValueAccess value_access_request_msg_ = ValueAccess();
-    rclcpp::Subscription<ValueAccess>::SharedPtr value_access_subscriber_;
+    // std::mutex value_access_request_msg_mutex_;
+    // ValueAccess value_access_request_msg_ = ValueAccess();
+    // rclcpp::Subscription<ValueAccess>::SharedPtr value_access_subscriber_;
+
+
+    EpollEvent value_access_srv_evt_;
+    uint32_t value_returned_;
+    std::mutex value_access_mutex_;
+    rclcpp::Service<ValueAccess>::SharedPtr value_access_service_;
+    std::condition_variable fresh_TxSdo_;
+
+
+    AxisState::Response value_access_response;
+
 
 
 

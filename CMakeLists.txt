@@ -18,6 +18,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ControlGains.msg"
   "msg/ValueAccess.msg"
   "srv/AxisState.srv"
+  "srv/ValueAccessData.srv"
   
 )
 ament_export_dependencies(rosidl_default_runtime)
