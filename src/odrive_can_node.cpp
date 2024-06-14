@@ -649,7 +649,7 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
             return true; 
             }); // wait for procedure_result
 
-        print("!!got service response!")
+        RCLCPP_INFO(rclcpp::Node::get_logger(), "Got Service response!!!");
 }
 
 
