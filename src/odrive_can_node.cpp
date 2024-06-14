@@ -104,7 +104,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     // value_access_subscriber_ = rclcpp::Node::create_subscription<ValueAccess>("value_access_request", gains_subscriber_qos, std::bind(&ODriveCanNode::value_access_set_callback, this, _1));
 
     rclcpp::QoS value_access_srv_qos(rclcpp::KeepAll{});
-    value_access_service_ = rclcpp::Node::create_service<ValueAccessData>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
+    value_access_service_ = rclcpp::Node::create_service<ValueAccess>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
 
 
 
