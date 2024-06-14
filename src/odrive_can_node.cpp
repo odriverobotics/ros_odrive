@@ -554,7 +554,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
 
 void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response) {
     
-    uint32 datatype_specifier = request->data_type_specifier;
+    uint32_t datatype_specifier = request->data_type_specifier;
     {
         std::unique_lock<std::mutex> guard(value_access_mutex_);
         
