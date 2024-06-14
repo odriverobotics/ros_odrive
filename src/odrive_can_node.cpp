@@ -97,11 +97,11 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
     gains_subscriber_ = rclcpp::Node::create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
 
-    rclcpp::QoS value_access_response_qos(rclcpp::KeepAll{});
-    value_access_response_publisher_ = rclcpp::Node::create_publisher<ValueAccess>("value_access_response", value_access_response_qos);
+    // rclcpp::QoS value_access_response_qos(rclcpp::KeepAll{});
+    // value_access_response_publisher_ = rclcpp::Node::create_publisher<ValueAccess>("value_access_response", value_access_response_qos);
 
-    rclcpp::QoS value_access_subscriber_qos(rclcpp::KeepAll{});
-    value_access_subscriber_ = rclcpp::Node::create_subscription<ValueAccess>("value_access_request", gains_subscriber_qos, std::bind(&ODriveCanNode::value_access_set_callback, this, _1));
+    // rclcpp::QoS value_access_subscriber_qos(rclcpp::KeepAll{});
+    // value_access_subscriber_ = rclcpp::Node::create_subscription<ValueAccess>("value_access_request", gains_subscriber_qos, std::bind(&ODriveCanNode::value_access_set_callback, this, _1));
 
     rclcpp::QoS value_access_srv_qos(rclcpp::KeepAll{});
     value_access_service_ = rclcpp::Node::create_service<ValueAccessData>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
