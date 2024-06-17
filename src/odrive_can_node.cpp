@@ -90,8 +90,8 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     // TESTING START
 
-    constexpr size_t queue_size = 10;
-    rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepLast(queue_size));
+
+    rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepLast(10));
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
