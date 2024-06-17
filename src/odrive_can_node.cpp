@@ -234,6 +234,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
         case CmdId::kTxSdo: {
             if (!verify_length("kTxSdo", 8, frame.can_dlc)) break;
+            {
             std::lock_guard<std::mutex> guard(value_access_mutex_);
             
 
@@ -296,7 +297,10 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             }   
 
             value_access_datatype_specifier_ = 0;
+            received_TxSdo_ = true;
             fresh_TxSdo_.notify_one();
+
+            }
 
             
             break;
@@ -564,6 +568,7 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", request->opcode);
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "datatype specifier: %d", request->data_type_specifier);
 
+        received_TxSdo_ = false;
         value_access_reponse_.opcode = request->opcode;
         value_access_reponse_.endpoint_id = request->endpoint_id;
         
@@ -651,7 +656,7 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
         std::unique_lock<std::mutex> guard(value_access_mutex_); //
         auto call_time = std::chrono::steady_clock::now();
         fresh_TxSdo_.wait(guard, [this, &call_time]() {
-            return true; 
+            return received_TxSdo_; 
             }); // wait for procedure_result
 
         // response->endpoint_id = value_access_reponse_.endpoint_id;
