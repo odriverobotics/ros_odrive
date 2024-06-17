@@ -97,12 +97,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
     gains_subscriber_ = rclcpp::Node::create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
 
-    // rclcpp::QoS value_access_response_qos(rclcpp::KeepAll{});
-    // value_access_response_publisher_ = rclcpp::Node::create_publisher<ValueAccess>("value_access_response", value_access_response_qos);
-
-    // rclcpp::QoS value_access_subscriber_qos(rclcpp::KeepAll{});
-    // value_access_subscriber_ = rclcpp::Node::create_subscription<ValueAccess>("value_access_request", gains_subscriber_qos, std::bind(&ODriveCanNode::value_access_set_callback, this, _1));
-
+   
     rclcpp::QoS value_access_srv_qos(rclcpp::KeepAll{});
     value_access_service_ = rclcpp::Node::create_service<ValueAccess>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
 
@@ -456,100 +451,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
 // TESTING END
 
 
-// TESTING START
-// Trying to send a value access msg
 
-
-// void ODriveCanNode::value_access_set_callback(const odrive_can::msg::ValueAccess::SharedPtr msg) {
-
-//     RCLCPP_INFO(rclcpp::Node::get_logger(), "SETTING VALUE or GETTTING VALUE");
-//     RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", msg->opcode);
-//     RCLCPP_ERROR(rclcpp::Node::get_logger(), "datatype specifier: %d", msg->data_type_specifier);
-
-
-//     struct can_frame frame;
-//     frame.can_id = node_id_ << 5 | kRxSdo;
-//     {
-//         std::lock_guard<std::mutex> guard(value_access_request_msg_mutex_);
-//         write_le<uint8_t>(msg->opcode, frame.data);
-//         write_le<uint16_t>(msg->endpoint_id, frame.data + 1);
-//         if(msg->opcode == 0){
-//             // If the message is asking to read a value then don't write the value to CAN
-//             data_type_specifier_request = msg->data_type_specifier;
-
-//         }else if(msg->opcode == 1) {
-//             // If the message is asking to write a value then handle that
-
-
-//             switch (msg->data_type_specifier) {
-
-//                 case 0: {
-//                     // bool
-//                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was bool");
-//                     write_le<bool>(msg->bool_value,   frame.data + 4);
-//                     break;
-                    
-//                 }
-//                 case 1: {
-//                     // float32
-//                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was float32");
-//                     write_le<float>(msg->float32_value,   frame.data + 4);
-//                     break;
-                   
-//                 }
-//                 case 2: {
-//                     // int32
-//                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
-//                     write_le<int32_t>(msg->int32_value,   frame.data + 4);
-//                     break;
-
-//                 }
-//                 case 3: {
-//                     // uint64
-//                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
-//                     write_le<uint64_t>(msg->uint64_value,   frame.data + 4);
-//                     break;
-
-//                 }    
-//                 case 4: {
-//                     // uint32
-//                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
-//                     write_le<uint32_t>(msg->uint32_value,   frame.data + 4);
-//                     break;
-
-//                 }
-//                 case 5: {
-//                     // uint16
-//                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
-//                     write_le<uint16_t>(msg->uint16_value,   frame.data + 4);
-//                     break;
-
-//                 }
-//                 case 6: {
-//                     // uint8
-//                     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
-//                     write_le<uint8_t>(msg->uint8_value,   frame.data + 4);
-//                     break;
-
-//                 }
-//                 default: 
-//                     RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", msg->data_type_specifier);
-//                     return;
-//             }   
-            
-
-
-
-//         }
-        
-//     }
-//     frame.can_dlc = 8;
-//     can_intf_.send_can_frame(frame);
-
-//     RCLCPP_INFO(rclcpp::Node::get_logger(), "END OF SETTING VALUE CALLBACK!!!");
-    
-    
-// }
 
 
 

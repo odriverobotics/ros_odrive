@@ -55,7 +55,7 @@ private:
     void ctrl_msg_callback();
     // TESTING START
     void control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg);
-    // void value_access_set_callback(const odrive_can::msg::ValueAccess::SharedPtr msg);
+    
     void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
 
     
@@ -91,17 +91,6 @@ private:
     ControlGains gains_msg_ = ControlGains();
     rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
 
-
-    // std::mutex value_access_response_msg_mutex_;
-    // ValueAccess value_access_response_msg_ = ValueAccess();
-    // rclcpp::Publisher<ValueAccess>::SharedPtr value_access_response_publisher_;
-
-    // uint32_t data_type_specifier_request;
-
-
-    // std::mutex value_access_request_msg_mutex_;
-    // ValueAccess value_access_request_msg_ = ValueAccess();
-    // rclcpp::Subscription<ValueAccess>::SharedPtr value_access_subscriber_;
 
 
     EpollEvent value_access_srv_evt_;
