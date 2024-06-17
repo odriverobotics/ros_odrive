@@ -433,8 +433,8 @@ void ODriveCanNode::ctrl_msg_callback() {
 void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg) {
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS FEEDBACK!!!");
-    RCLCPP_ERROR(rclcpp::Node::get_logger(), "vel gain: %f", msg->vel_gain);
-    RCLCPP_ERROR(rclcpp::Node::get_logger(), "vel integrator gain: %f", msg->vel_integrator_gain);
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "vel gain: %f", msg->vel_gain);
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "vel integrator gain: %f", msg->vel_integrator_gain);
 
 
     struct can_frame frame;
@@ -564,9 +564,9 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
         value_access_datatype_specifier_ = request->data_type_specifier;
         
 
-        RCLCPP_INFO(rclcpp::Node::get_logger(), "SETTING VALUE or GETTTING VALUE");
-        RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", request->opcode);
-        RCLCPP_ERROR(rclcpp::Node::get_logger(), "datatype specifier: %d", request->data_type_specifier);
+        // RCLCPP_INFO(rclcpp::Node::get_logger(), "SETTING VALUE or GETTTING VALUE");
+        // RCLCPP_INFO(rclcpp::Node::get_logger(), "opcode: %d", request->opcode);
+        // RCLCPP_INFO(rclcpp::Node::get_logger(), "datatype specifier: %d", request->data_type_specifier);
 
         received_TxSdo_ = false;
         value_access_reponse_.opcode = request->opcode;
@@ -649,6 +649,19 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
         frame.can_dlc = 8;
         can_intf_.send_can_frame(frame);
 
+
+        if(request->opcode == 1){
+            // If the opcode was 1 then we also send out a read request to get back the value that was set
+            struct can_frame read_frame;
+            read_frame.can_id = node_id_ << 5 | kRxSdo;
+        
+            write_le<uint8_t>(0, read_frame.data);
+            write_le<uint16_t>(request->endpoint_id, read_frame.data + 1);
+
+            read_frame.can_dlc = 8;
+            can_intf_.send_can_frame(read_frame);
+        }
+
         RCLCPP_INFO(rclcpp::Node::get_logger(), "END OF SETTING VALUE Request!!!");
 
         }
@@ -659,8 +672,7 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
             return received_TxSdo_; 
             }); // wait for procedure_result
 
-        // response->endpoint_id = value_access_reponse_.endpoint_id;
-        // response->opcode = value_access_reponse_.opcode;
+        
         *response = value_access_reponse_;
         value_access_reponse_ = ValueAccess::Response();
         RCLCPP_INFO(rclcpp::Node::get_logger(), "Got Service response!!!");
