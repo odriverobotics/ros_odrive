@@ -654,6 +654,8 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
             return true; 
             }); // wait for procedure_result
 
+        response->endpoint_id = value_access_reponse_.endpoint_id;
+        response->opcode = 3;
         RCLCPP_INFO(rclcpp::Node::get_logger(), "Got Service response!!!");
 }
 
