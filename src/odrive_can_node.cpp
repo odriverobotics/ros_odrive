@@ -554,7 +554,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
 
 void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response) {
     
-    uint32_t datatype_specifier = request->data_type_specifier;
+    value_access_datatype_specifier_ = request->data_type_specifier;
     {
         std::unique_lock<std::mutex> guard(value_access_mutex_);
         
@@ -565,7 +565,7 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
 
         value_access_reponse_.opcode = request->opcode;
         value_access_reponse_.endpoint_id = request->endpoint_id;
-        value_access_reponse_.data_type_specifier = request->data_type_specifier;
+        
 
 
         struct can_frame frame;
@@ -580,7 +580,7 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
                 // If the message is asking to write a value then handle that
 
 
-                switch (datatype_specifier) {
+                switch (value_access_datatype_specifier_) {
 
                     case 0: {
                         // bool
