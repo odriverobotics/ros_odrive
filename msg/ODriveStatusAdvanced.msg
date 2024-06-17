@@ -4,4 +4,13 @@ float32 fet_temperature
 float32 motor_temperature
 uint32 active_errors
 uint32 disarm_reason
-bool is_metric
+float32 pos_estimate
+float32 vel_estimate
+float32 torque_target
+float32 torque_estimate
+float32 iq_setpoint
+float32 iq_measured
+uint32 active_errors
+uint8 axis_state
+uint8 procedure_result
+bool trajectory_done_flag

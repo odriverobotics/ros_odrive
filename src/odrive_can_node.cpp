@@ -320,7 +320,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
     // TESTING START
     if (odrv_advanced_pub_flag_ == 0b111) {
-        odrv_advanced_stat_.is_metric = false;
+        
         odrv_advanced_publisher_->publish(odrv_advanced_stat_);
         odrv_advanced_pub_flag_ = 0;
     }
