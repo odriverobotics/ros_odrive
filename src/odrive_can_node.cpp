@@ -231,6 +231,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
+            odrv_pub_flag_ |= 0b100;
 
             // TESTING START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
