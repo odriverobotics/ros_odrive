@@ -239,7 +239,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
 
             // reads in the correct datatype
-            switch (data_type_specifier_request) {
+            switch (value_access_datatype_specifier_) {
 
                 case 0: {
                     // bool
