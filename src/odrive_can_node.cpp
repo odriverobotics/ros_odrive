@@ -155,7 +155,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
             // TESTING START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
-            odrv_advanced_stat_.active_errors    = read_le<uint32_t>(frame.data + 0);
+            odrv_advanced_stat_.ctrl_active_errors    = read_le<uint32_t>(frame.data + 0);
             odrv_advanced_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
             odrv_advanced_stat_.procedure_result  = read_le<uint8_t>(frame.data + 5);
             odrv_advanced_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
