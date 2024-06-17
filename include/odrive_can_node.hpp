@@ -105,7 +105,8 @@ private:
 
 
     EpollEvent value_access_srv_evt_;
-    uint32_t value_returned_;
+    // uint32_t value_returned_;
+    ValueAccess::Response value_access_reponse_;
     std::mutex value_access_mutex_;
     rclcpp::Service<ValueAccess>::SharedPtr value_access_service_;
     std::condition_variable fresh_TxSdo_;

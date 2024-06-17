@@ -563,6 +563,10 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "opcode: %d", request->opcode);
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "datatype specifier: %d", request->data_type_specifier);
 
+        value_access_reponse_.opcode = request->opcode;
+        value_access_reponse_.endpoint_id = request->endpoint_id;
+        value_access_reponse_.data_type_specifier = request->data_type_specifier;
+
 
         struct can_frame frame;
         frame.can_id = node_id_ << 5 | kRxSdo;
