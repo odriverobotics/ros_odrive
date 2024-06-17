@@ -113,7 +113,7 @@ private:
 
 
     // TESTING START
-
+    short int odrv_advanced_ctrl_pub_flag_ = 0;
     short int odrv_advanced_pub_flag_ = 0;
     std::mutex odrv_advanced_stat_mutex_;
     ODriveStatusAdvanced odrv_advanced_stat_ = ODriveStatusAdvanced();

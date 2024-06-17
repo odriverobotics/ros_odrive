@@ -91,7 +91,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     // TESTING START
 
     
-    rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepAll{});
+    rclcpp::QoS odrv_advanced_stat_qos();
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
@@ -152,6 +152,16 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
             ctrl_pub_flag_ |= 0b0001;
             fresh_heartbeat_.notify_one();
+
+            // TESTING START
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.active_errors    = read_le<uint32_t>(frame.data + 0);
+            odrv_advanced_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
+            odrv_advanced_stat_.procedure_result  = read_le<uint8_t>(frame.data + 5);
+            odrv_advanced_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
+            odrv_advanced_ctrl_pub_flag_ |= 0b0001;
+            // TESTING END
+
             break;
         }
         case CmdId::kGetError: {
@@ -177,6 +187,13 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.pos_estimate = read_le<float>(frame.data + 0);
             ctrl_stat_.vel_estimate = read_le<float>(frame.data + 4);
             ctrl_pub_flag_ |= 0b0010;
+
+            // TESTING START
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.pos_estimate = read_le<float>(frame.data + 0);
+            odrv_advanced_stat_.vel_estimate = read_le<float>(frame.data + 4);
+            odrv_advanced_ctrl_pub_flag_ |= 0b0010;
+            // TESTING END
             break;
         }
         case CmdId::kGetIq: {
@@ -185,6 +202,13 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.iq_setpoint = read_le<float>(frame.data + 0);
             ctrl_stat_.iq_measured = read_le<float>(frame.data + 4);
             ctrl_pub_flag_ |= 0b0100;
+
+            // TESTING START
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.pos_estimate.iq_setpoint = read_le<float>(frame.data + 0);
+            odrv_advanced_stat_.pos_estimate.iq_measured = read_le<float>(frame.data + 4);
+            odrv_advanced_ctrl_pub_flag_ |= 0b0100;
+            // TESTING END
             break;
         }
         case CmdId::kGetTemp: {
@@ -222,6 +246,15 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.torque_target   = read_le<float>(frame.data + 0);
             ctrl_stat_.torque_estimate = read_le<float>(frame.data + 4);
             ctrl_pub_flag_ |= 0b1000; 
+
+            // TESTING START
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.torque_target   = read_le<float>(frame.data + 0);
+            odrv_advanced_stat_.torque_estimate = read_le<float>(frame.data + 4);
+            
+            odrv_advanced_ctrl_pub_flag_ |= 0b1000;
+            // TESTING END
+
             break;
         }
 
@@ -294,7 +327,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             value_access_datatype_specifier_ = 0;
             received_TxSdo_ = true;
             fresh_TxSdo_.notify_one();
-
+odrv_advanced_ctrl_pub_flag_ =
             }
 
             
@@ -320,9 +353,14 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
     // TESTING START
     if (odrv_advanced_pub_flag_ == 0b111) {
+
+        if(odrv_advanced_ctrl_pub_flag_ == 0b1111){
+            odrv_advanced_publisher_->publish(odrv_advanced_stat_);
+            odrv_advanced_pub_flag_ = 0;
+            odrv_advanced_ctrl_pub_flag_ = 0;
+        }
         
-        odrv_advanced_publisher_->publish(odrv_advanced_stat_);
-        odrv_advanced_pub_flag_ = 0;
+        
     }
 
     // TESTING END
