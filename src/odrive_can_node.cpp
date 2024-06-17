@@ -205,8 +205,8 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
             // TESTING START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
-            odrv_advanced_stat_.pos_estimate.iq_setpoint = read_le<float>(frame.data + 0);
-            odrv_advanced_stat_.pos_estimate.iq_measured = read_le<float>(frame.data + 4);
+            odrv_advanced_stat_iq_setpoint = read_le<float>(frame.data + 0);
+            odrv_advanced_stat_iq_measured = read_le<float>(frame.data + 4);
             odrv_advanced_ctrl_pub_flag_ |= 0b0100;
             // TESTING END
             break;
