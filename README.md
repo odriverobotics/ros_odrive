@@ -37,7 +37,6 @@ The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Tho
 
 We've added a custom ROS service to access or change arbitrary values on the odrive.  
 The structure of the service call is as follows: 
-  
 uint8 opcode   
 uint16 endpoint_id  
 uint32 data_type_specifier  
@@ -48,7 +47,7 @@ uint64 uint64_value
 uint32 uint32_value  
 uint16 uint16_value  
 uint8 uint8_value  
----  
+\-\-\-  
 uint8 opcode  
 uint16 endpoint_id  
 bool bool_value  
