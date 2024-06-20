@@ -10,26 +10,36 @@ We've made some changes to this package to make it more versatile than the base 
 
 We've added a custom ROS2 message type (i.e. an interface) called ODriveStatusAdvanced for facilitating sending out information on the Odrive and the Controller wihtout modifying the ControllerStatus or ODriveStatus publishers.
 
-The structure of ODriveStatusAdvanced is shown below:
+The structure of ODriveStatusAdvanced is shown below:  
 float32 bus_voltage  
 float32 bus_current  
 float32 fet_temperature  
-float32 motor_temperature
-uint32 active_errors
-uint32 disarm_reason
-float32 pos_estimate
-float32 vel_estimate
-float32 torque_target
-float32 torque_estimate
-float32 iq_setpoint
-float32 iq_measured
-uint32 ctrl_active_errors
-uint8 axis_state
-uint8 procedure_result
-bool trajectory_done_flag
+float32 motor_temperature  
+uint32 active_errors  
+uint32 disarm_reason  
+float32 pos_estimate  
+float32 vel_estimate  
+float32 torque_target  
+float32 torque_estimate  
+float32 iq_setpoint  
+float32 iq_measured  
+uint32 ctrl_active_errors  
+uint8 axis_state  
+uint8 procedure_result  
+bool trajectory_done_flag  
+
+
+The message consists of all the fields from ODriveStatus followed by all the fields from ControllerStatus. When the node receives status data back from the CAN bus it populates the ODriveStatus message, the ControllerStatus message and now it will populate the ODriveStatusAdvanced message using that same information and will publish that message when it has all the necessary data for each message. 
+
+The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "odrive_status_advanced". E.g. "/pitch/odrv1/odrive_status_advanced".
+
+### ValueAccess ###
 
 
 
+
+
+## ODrive Original ReadMe Continued ##
 For information about installation, prerequisites, and getting started, checkout the ODrive [ROS CAN Package Guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html).
 
 Compatible Devices:
