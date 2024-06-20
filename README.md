@@ -11,9 +11,9 @@ We've made some changes to this package to make it more versatile than the base 
 We've added a custom ROS2 message type (i.e. an interface) called ODriveStatusAdvanced for facilitating sending out information on the Odrive and the Controller wihtout modifying the ControllerStatus or ODriveStatus publishers.
 
 The structure of ODriveStatusAdvanced is shown below:
-float32 bus_voltage
-float32 bus_current
-float32 fet_temperature
+float32 bus_voltage  
+float32 bus_current  
+float32 fet_temperature  
 float32 motor_temperature
 uint32 active_errors
 uint32 disarm_reason
