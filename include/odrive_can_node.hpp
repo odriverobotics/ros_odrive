@@ -34,7 +34,7 @@ using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
 
 using ControlGains = odrive_can::msg::ControlGains;
 
-using ValueAccess = odrive_can::srv::ValueAccessData;
+using ValueAccess = odrive_can::srv::ValueAccess;
 
 
 // TESTING END
