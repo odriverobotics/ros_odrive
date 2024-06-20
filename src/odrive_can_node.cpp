@@ -5,6 +5,10 @@
 #include <chrono>
 
 enum CmdId : uint32_t {
+    // This enum structure is where we assign a name to each cmd_id for the CAN protocols
+    // This was limited to a few protocols in the original ordrive code but this is now the complete list
+
+
     // CUSTOM CODE START
     kGet_Version = 0x000,
     // CUSTOM CODE END
@@ -65,6 +69,7 @@ enum CmdId : uint32_t {
 };
 
 enum ControlMode : uint64_t {
+    // This enum assigns names to the contorl mode ints so it is easier to parse when the msg is recieved from the CAN Bus
     kVoltageControl,
     kTorqueControl,
     kVelocityControl,
