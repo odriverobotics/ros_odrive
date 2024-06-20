@@ -36,6 +36,25 @@ The message consists of all the fields from ODriveStatus followed by all the fie
 
 The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "odrive_status_advanced". E.g. "/pitch/odrv1/odrive_status_advanced".
 
+## Control Gains ##
+
+We've added a custom ROS2 message called ControlGains to take care of setting the Velocity and Velocity Integrator gains via messages. 
+
+It's structure is shown below: 
+
+float32 vel_gain  
+float32 vel_integrator_gain  
+
+This is a message that will be sent to the Odrive.
+
+Once the message is received by the Odrive's subscriber it will send a CAN message to set the motor's velocity and velocity integrator gains. 
+
+vel_gain - specifies the new velocity gain
+vel_integrator_gain - specifies the new velocity integrator gain.
+
+The topic of the ControlGains subscriber is set to "control_gains". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_gains". E.g. "/pitch/odrv1/control_gains".
+
+
 ### ValueAccess ###
 
 We've added a custom ROS service to access or change arbitrary values on the odrive. 
@@ -75,21 +94,6 @@ The other parameters are just used to send or receive the values themselves. To 
 
 The service name will be "access_value" combined with the odrive's namespace. E.g. "/pitch/odrv1/access_value"
 
-## Control Gains ##
-
-We've added a custom ROS2 message called ControlGains to take care of setting the Velocity and Velocity Integrator gains via messages. 
-
-It's structure is shown below: 
-
-float32 vel_gain  
-float32 vel_integrator_gain  
-
-This is a message that will be sent to the Odrive.
-
-Once the message is received by the Odrive's subscriber it will send a CAN message to set the motor's velocity and velocity integrator gains. 
-
-vel_gain - specifies the new velocity gain
-vel_integrator_gain - specifies the new velocity integrator gain.
 
 
 
