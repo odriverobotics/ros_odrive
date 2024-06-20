@@ -69,7 +69,7 @@ enum CmdId : uint32_t {
 };
 
 enum ControlMode : uint64_t {
-    // This enum assigns names to the contorl mode ints so it is easier to parse when the msg is recieved from the CAN Bus
+    // This enum assigns names to the control mode identifiers so it is easier to parse when the msg is recieved from the CAN Bus
     kVoltageControl,
     kTorqueControl,
     kVelocityControl,
@@ -81,29 +81,34 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::Node::declare_parameter<std::string>("interface", "can0");
     rclcpp::Node::declare_parameter<uint16_t>("node_id", 0);
 
-    rclcpp::QoS ctrl_stat_qos(rclcpp::KeepAll{});
+    rclcpp::QoS ctrl_stat_qos(rclcpp::KeepLast(10));
     ctrl_publisher_ = rclcpp::Node::create_publisher<ControllerStatus>("controller_status", ctrl_stat_qos);
     
-    rclcpp::QoS odrv_stat_qos(rclcpp::KeepAll{});
+    rclcpp::QoS odrv_stat_qos(rclcpp::KeepLast(10));
     odrv_publisher_ = rclcpp::Node::create_publisher<ODriveStatus>("odrive_status", odrv_stat_qos);
 
-    rclcpp::QoS ctrl_msg_qos(rclcpp::KeepAll{});
+    rclcpp::QoS ctrl_msg_qos(rclcpp::KeepLast(10));
     subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_message", ctrl_msg_qos, std::bind(&ODriveCanNode::subscriber_callback, this, _1));
 
-    rclcpp::QoS srv_qos(rclcpp::KeepAll{});
+    rclcpp::QoS srv_qos(rclcpp::KeepLast(10));
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
 
     // CUSTOM CODE START
 
-
+    // We set this to only keep the last 10 because with KeepAll, repeatedly creating subscribers will cause the thread to become overloaded and crash
     rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepLast(10));
+
+    // Creates the publisher for the ODriveStatusAdvanced
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
-    rclcpp::QoS gains_subscriber_qos(rclcpp::KeepAll{});
+    
+    //Creates the subscriber for the ControlGains messages
+    rclcpp::QoS gains_subscriber_qos(rclcpp::KeepLast(10));
     gains_subscriber_ = rclcpp::Node::create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
 
    
-    rclcpp::QoS value_access_srv_qos(rclcpp::KeepAll{});
+    //Creates the service for read and writing to arbitrary values
+    rclcpp::QoS value_access_srv_qos(rclcpp::KeepLast(10));
     value_access_service_ = rclcpp::Node::create_service<ValueAccess>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
 
 
@@ -141,13 +146,17 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
 }
 
 void ODriveCanNode::recv_callback(const can_frame& frame) {
+    // This is what is called whenever we receive a frame from the CAN
+
+
 
     if(((frame.can_id >> 5) & 0x3F) != node_id_) return;
 
     // checks the lower 5 bits of the can_id which store the cmd_id
-    // ost → ODrive
-
+    // We check which command id it matches to decide what data the CAN has sent to us
     switch(frame.can_id & 0x1F) {
+         
+
         case CmdId::kHeartbeat: {
             if (!verify_length("kHeartbeat", 8, frame.can_dlc)) break;
             std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
@@ -159,6 +168,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             fresh_heartbeat_.notify_one();
 
             // CUSTOM CODE START
+            // This gets the needed values from 
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.ctrl_active_errors    = read_le<uint32_t>(frame.data + 0);
             odrv_advanced_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
