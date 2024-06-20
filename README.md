@@ -29,13 +29,16 @@ uint8 procedure_result
 bool trajectory_done_flag  
 
 
+This is a message that will be published from the Odrive consistently when data is available. 
+
 The message consists of all the fields from ODriveStatus followed by all the fields from ControllerStatus. When the node receives status data back from the CAN bus it populates the ODriveStatus message, the ControllerStatus message and now it will populate the ODriveStatusAdvanced message using that same information and will publish that message when it has all the necessary data for each message. 
 
 The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "odrive_status_advanced". E.g. "/pitch/odrv1/odrive_status_advanced".
 
 ### ValueAccess ###
 
-We've added a custom ROS service to access or change arbitrary values on the odrive.  
+We've added a custom ROS service to access or change arbitrary values on the odrive. 
+
 The structure of the service call is as follows: 
 uint8 opcode   
 uint16 endpoint_id  
@@ -58,7 +61,32 @@ uint32 uint32_value
 uint16 uint16_value  
 uint8 uint8_value  
 
+This is a service that will be sent to the Odrive and the Odrive will send a response back to the client.
 
+The first part of the service message is the structure of the request that we send through to the odrive. The second part of the service message is the structure of the response that we receive. 
+
+The documentation for how to access or change arbirary values for the Odrive via CAN bus is detailed at this [Link](https://docs.odriverobotics.com/v/latest/guides/can-guide.html#can-endpoint-access). This service is a wrapper for the CAN functionality that works as follows:  
+opcode - (0 - read, 1 - write) This is functionally a boolean we use to specify whether we want to read a particular value or write to it  
+endpoint_id - This is the endpoint of the value as specified for the relevant version of the firmware. (It changes each firmware version so you should check [this list](https://docs.odriverobotics.com/releases/firmware) to find the right endpoint ids for your your version.  
+data_type_specifier - (0 - bool, 1 - float32, 2 - int32, 3 - uint64, 4 - uint32, 5 - uint16, 6 - uint8) This will specify the type of data that is being passed to the odrive or should be expected to be received. This is necessary otherwise our code won't know how to handle the values.  
+The other parameters are just used to send or receive the values themselves. To work with ROS and C++ we had to make them separate parameters but only one should be populated at a time and it should be specified with the data_type_specifier.
+
+The service name will be "access_value" combined with the odrive's namespace. E.g. "/pitch/odrv1/access_value"
+
+## Control Gains ##
+
+We've added a custom ROS2 message called ControlGains to take care of setting the Velocity and Velocity Integrator gains via messages. 
+
+It's structure is shown below:  
+float32 vel_gain  
+float32 vel_integrator_gain  
+
+This is a message that will be sent to the Odrive.
+
+Once the message is received by the Odrive's subscriber it will send a CAN message to set the motor's velocity and velocity integrator gains. 
+
+vel_gain - specifies the new velocity gain
+vel_integrator_gain - specifies the new velocity integrator gain.
 
 
 
