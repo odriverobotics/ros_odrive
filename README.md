@@ -2,6 +2,34 @@
 
 This repository contains a ROS2 node intended for communication with ODrive motor controllers via CAN bus.
 
+## Changes from the base package ##
+
+We've made some changes to this package to make it more versatile than the base odrive_can package. 
+
+### ODriveStatusAdvanced ###
+
+We've added a custom ROS2 message type (i.e. an interface) called ODriveStatusAdvanced for facilitating sending out information on the Odrive and the Controller wihtout modifying the ControllerStatus or ODriveStatus publishers.
+
+The structure of ODriveStatusAdvanced is shown below:
+float32 bus_voltage
+float32 bus_current
+float32 fet_temperature
+float32 motor_temperature
+uint32 active_errors
+uint32 disarm_reason
+float32 pos_estimate
+float32 vel_estimate
+float32 torque_target
+float32 torque_estimate
+float32 iq_setpoint
+float32 iq_measured
+uint32 ctrl_active_errors
+uint8 axis_state
+uint8 procedure_result
+bool trajectory_done_flag
+
+
+
 For information about installation, prerequisites, and getting started, checkout the ODrive [ROS CAN Package Guide](https://docs.odriverobotics.com/v/latest/guides/ros-package.html).
 
 Compatible Devices:
