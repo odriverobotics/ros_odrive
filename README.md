@@ -87,9 +87,13 @@ This is a service that will be sent to the Odrive and the Odrive will send a res
 The first part of the service message is the structure of the request that we send through to the odrive. The second part of the service message is the structure of the response that we receive. 
 
 The documentation for how to access or change arbirary values for the Odrive via CAN bus is detailed at this [Link](https://docs.odriverobotics.com/v/latest/guides/can-guide.html#can-endpoint-access). This service is a wrapper for the CAN functionality that works as follows:  
+
 opcode - (0 - read, 1 - write) This is functionally a boolean we use to specify whether we want to read a particular value or write to it  
-endpoint_id - This is the endpoint of the value as specified for the relevant version of the firmware. (It changes each firmware version so you should check [this list](https://docs.odriverobotics.com/releases/firmware) to find the right endpoint ids for your your version.  
-data_type_specifier - (0 - bool, 1 - float32, 2 - int32, 3 - uint64, 4 - uint32, 5 - uint16, 6 - uint8) This will specify the type of data that is being passed to the odrive or should be expected to be received. This is necessary otherwise our code won't know how to handle the values.  
+
+endpoint_id - This is the endpoint of the value as specified for the relevant version of the firmware. (It changes each firmware version so you should check [this list](https://docs.odriverobotics.com/releases/firmware) to find the right endpoint ids for your your version.
+
+data_type_specifier - (0 - bool, 1 - float32, 2 - int32, 3 - uint64, 4 - uint32, 5 - uint16, 6 - uint8) This will specify the type of data that is being passed to the odrive or should be expected to be received. This is necessary otherwise our code won't know how to handle the values. 
+
 The other parameters are just used to send or receive the values themselves. To work with ROS and C++ we had to make them separate parameters but only one should be populated at a time and it should be specified with the data_type_specifier.
 
 The service name will be "access_value" combined with the odrive's namespace. E.g. "/pitch/odrv1/access_value"
