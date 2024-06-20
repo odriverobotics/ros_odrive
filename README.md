@@ -10,7 +10,8 @@ We've made some changes to this package to make it more versatile than the base 
 
 We've added a custom ROS2 message type (i.e. an interface) called ODriveStatusAdvanced for facilitating sending out information on the Odrive and the Controller wihtout modifying the ControllerStatus or ODriveStatus publishers.
 
-The structure of ODriveStatusAdvanced is shown below:  
+The structure of ODriveStatusAdvanced is shown below:
+  
 float32 bus_voltage  
 float32 bus_current  
 float32 fet_temperature  
@@ -39,7 +40,8 @@ The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Tho
 
 We've added a custom ROS service to access or change arbitrary values on the odrive. 
 
-The structure of the service call is as follows: 
+The structure of the service call is as follows:  
+
 uint8 opcode   
 uint16 endpoint_id  
 uint32 data_type_specifier  
@@ -77,7 +79,8 @@ The service name will be "access_value" combined with the odrive's namespace. E.
 
 We've added a custom ROS2 message called ControlGains to take care of setting the Velocity and Velocity Integrator gains via messages. 
 
-It's structure is shown below:  
+It's structure is shown below: 
+
 float32 vel_gain  
 float32 vel_integrator_gain  
 
