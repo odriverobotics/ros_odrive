@@ -22,8 +22,8 @@ enum CmdId : uint32_t {
     kGetError = 0x003,             // SystemStatus      - publisher
 
     // CUSTOM CODE START
-    kRxSdo = 0x004,
-    kTxSdo = 0x005,
+    kRxSdo = 0x004, // The protocol to read/write to arbitrary parameters
+    kTxSdo = 0x005, // The protocol for when the Odrive receives a CAN response to a read request sent with RxSdo
     kAddress = 0x006,
     // CUSTOM CODE END
 
@@ -57,7 +57,7 @@ enum CmdId : uint32_t {
     kSetAbsolutePostion = 0x019,
     kSetPosGain = 0x01a,    
    
-    kSetVelGains = 0x01b,           //ControlGains - Subscriber
+    kSetVelGains = 0x01b,           //ControlGains - Subscriber (The protocol for setting the velocity and velocity integrator gains)
     // CUSTOM CODE END
 
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
