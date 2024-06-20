@@ -5,23 +5,23 @@
 #include <chrono>
 
 enum CmdId : uint32_t {
-    // TESTING START
+    // CUSTOM CODE START
     kGet_Version = 0x000,
-    // TESTING END
+    // CUSTOM CODE END
 
     kHeartbeat = 0x001,            // ControllerStatus  - publisher
 
-    // TESTING START
+    // CUSTOM CODE START
     kEstop = 0x002,
-    // TESTING END
+    // CUSTOM CODE END
 
     kGetError = 0x003,             // SystemStatus      - publisher
 
-    // TESTING START
+    // CUSTOM CODE START
     kRxSdo = 0x004,
     kTxSdo = 0x005,
     kAddress = 0x006,
-    // TESTING END
+    // CUSTOM CODE END
 
     kSetAxisState = 0x007,         // SetAxisState      - service
     kGetEncoderEstimates = 0x009,  // ControllerStatus  - publisher
@@ -29,39 +29,39 @@ enum CmdId : uint32_t {
     kSetInputPos = 0x00c,                  // ControlMessage    - subscriber
     kSetInputVel = 0x00d,                  // ControlMessage    - subscriber
     kSetInputTorque = 0x00e,               // ControlMessage    - subscriber
-    // TESTING START
+    // CUSTOM CODE START
     kSetLimits = 0x00f,
     kSetTrajVelLimit = 0x011,
     kSetTrajAccelLimit = 0x012,
     kSetTragInertia = 0x013,
-    // TESTING END
+    // CUSTOM CODE END
     kGetIq = 0x014,                // ControllerStatus  - publisher
     kGetTemp = 0x015,                      // SystemStatus      - publisher
     
-    // TESTING START
+    // CUSTOM CODE START
     kReboot = 0x016,
 
-    // TESTING END
+    // CUSTOM CODE END
 
     kGetBusVoltageCurrent = 0x017, // SystemStatus      - publisher
 
 
 
-    // TESTING START
+    // CUSTOM CODE START
 
     kClearErrors = 0x018,
     kSetAbsolutePostion = 0x019,
     kSetPosGain = 0x01a,    
    
     kSetVelGains = 0x01b,           //ControlGains - Subscriber
-    // TESTING END
+    // CUSTOM CODE END
 
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
 
-    // TESTING START
+    // CUSTOM CODE START
     kGetPowers = 0x01d,
     kEnterDFUMode = 0x01f,
-    // TESTING END
+    // CUSTOM CODE END
 };
 
 enum ControlMode : uint64_t {
@@ -88,7 +88,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
 
-    // TESTING START
+    // CUSTOM CODE START
 
 
     rclcpp::QoS odrv_advanced_stat_qos(rclcpp::KeepLast(10));
@@ -103,7 +103,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
 
 
-    // TESTING END
+    // CUSTOM CODE END
 
 }
 
@@ -153,14 +153,14 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_pub_flag_ |= 0b0001;
             fresh_heartbeat_.notify_one();
 
-            // TESTING START
+            // CUSTOM CODE START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.ctrl_active_errors    = read_le<uint32_t>(frame.data + 0);
             odrv_advanced_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
             odrv_advanced_stat_.procedure_result  = read_le<uint8_t>(frame.data + 5);
             odrv_advanced_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
             odrv_advanced_ctrl_pub_flag_ |= 0b0001;
-            // TESTING END
+            // CUSTOM CODE END
 
             break;
         }
@@ -171,12 +171,12 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.disarm_reason = read_le<uint32_t>(frame.data + 4);
             odrv_pub_flag_ |= 0b001;
 
-            // TESTING START
+            // CUSTOM CODE START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.active_errors = odrv_stat_.active_errors;
             odrv_advanced_stat_.disarm_reason = odrv_stat_.disarm_reason;
             odrv_advanced_pub_flag_ |= 0b001;
-            // TESTING END
+            // CUSTOM CODE END
 
 
             break;
@@ -188,12 +188,12 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.vel_estimate = read_le<float>(frame.data + 4);
             ctrl_pub_flag_ |= 0b0010;
 
-            // TESTING START
+            // CUSTOM CODE START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.pos_estimate = read_le<float>(frame.data + 0);
             odrv_advanced_stat_.vel_estimate = read_le<float>(frame.data + 4);
             odrv_advanced_ctrl_pub_flag_ |= 0b0010;
-            // TESTING END
+            // CUSTOM CODE END
             break;
         }
         case CmdId::kGetIq: {
@@ -203,12 +203,12 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.iq_measured = read_le<float>(frame.data + 4);
             ctrl_pub_flag_ |= 0b0100;
 
-            // TESTING START
+            // CUSTOM CODE START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.iq_setpoint = read_le<float>(frame.data + 0);
             odrv_advanced_stat_.iq_measured = read_le<float>(frame.data + 4);
             odrv_advanced_ctrl_pub_flag_ |= 0b0100;
-            // TESTING END
+            // CUSTOM CODE END
             break;
         }
         case CmdId::kGetTemp: {
@@ -218,12 +218,12 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.motor_temperature = read_le<float>(frame.data + 4);
             odrv_pub_flag_ |= 0b010;
 
-            // TESTING START
+            // CUSTOM CODE START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.fet_temperature = odrv_stat_.fet_temperature;
             odrv_advanced_stat_.motor_temperature = odrv_stat_.motor_temperature;
             odrv_advanced_pub_flag_ |= 0b010;
-            // TESTING END
+            // CUSTOM CODE END
             break;
         }
         case CmdId::kGetBusVoltageCurrent: {
@@ -233,12 +233,12 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
             odrv_pub_flag_ |= 0b100;
 
-            // TESTING START
+            // CUSTOM CODE START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.bus_voltage = odrv_stat_.bus_voltage;
             odrv_advanced_stat_.bus_current = odrv_stat_.bus_current;
             odrv_advanced_pub_flag_ |= 0b100;
-            // TESTING END
+            // CUSTOM CODE END
             break;
         }
         case CmdId::kGetTorques: {
@@ -248,18 +248,18 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.torque_estimate = read_le<float>(frame.data + 4);
             ctrl_pub_flag_ |= 0b1000; 
 
-            // TESTING START
+            // CUSTOM CODE START
             std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
             odrv_advanced_stat_.torque_target   = read_le<float>(frame.data + 0);
             odrv_advanced_stat_.torque_estimate = read_le<float>(frame.data + 4);
             
             odrv_advanced_ctrl_pub_flag_ |= 0b1000;
-            // TESTING END
+            // CUSTOM CODE END
 
             break;
         }
 
-        // TESTING START
+        // CUSTOM CODE START
 
         case CmdId::kTxSdo: {
             if (!verify_length("kTxSdo", 8, frame.can_dlc)) break;
@@ -335,7 +335,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             break;
         }
 
-        // TESTING END
+        // CUSTOM CODE END
         default: {
             RCLCPP_WARN(rclcpp::Node::get_logger(), "Received unused message: ID = 0x%x", (frame.can_id & 0x1F));
             break;
@@ -352,7 +352,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         odrv_pub_flag_ = 0;
     }
 
-    // TESTING START
+    // CUSTOM CODE START
     if (odrv_advanced_pub_flag_ == 0b111) {
 
         if(odrv_advanced_ctrl_pub_flag_ == 0b1111){
@@ -364,7 +364,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         
     }
 
-    // TESTING END
+    // CUSTOM CODE END
 }
 
 void ODriveCanNode::subscriber_callback(const ControlMessage::SharedPtr msg) {
@@ -460,7 +460,7 @@ void ODriveCanNode::ctrl_msg_callback() {
     can_intf_.send_can_frame(frame);
 }
 
-// TESTING START
+// CUSTOM CODE START
 // Trying to send an advanced control message
 
 
@@ -487,7 +487,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
 }
 
 
-// TESTING END
+// CUSTOM CODE END
 
 
 
@@ -621,7 +621,7 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
 }
 
 
-// TESTING END
+// CUSTOM CODE END
 
 inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
     bool valid = expected == length;

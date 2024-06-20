@@ -8,11 +8,11 @@
 #include "odrive_can/srv/axis_state.hpp"
 #include "socket_can.hpp"
 
-// TESTING START
+// CUSTOM CODE START
 #include "odrive_can/msg/o_drive_status_advanced.hpp"
 #include "odrive_can/msg/control_gains.hpp"
 #include "odrive_can/srv/value_access.hpp"
-// TESTING END
+// CUSTOM CODE END
 
 #include <mutex>
 #include <condition_variable>
@@ -28,7 +28,7 @@ using ODriveStatus = odrive_can::msg::ODriveStatus;
 using ControllerStatus = odrive_can::msg::ControllerStatus;
 using ControlMessage = odrive_can::msg::ControlMessage;
 
-// TESTING START
+// CUSTOM CODE START
 
 using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
 
@@ -37,7 +37,7 @@ using ControlGains = odrive_can::msg::ControlGains;
 using ValueAccess = odrive_can::srv::ValueAccess;
 
 
-// TESTING END
+// CUSTOM CODE END
 
 using AxisState = odrive_can::srv::AxisState;
 
@@ -52,13 +52,13 @@ private:
     void service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response);
     void request_state_callback();
     void ctrl_msg_callback();
-    // TESTING START
+    // CUSTOM CODE START
     void control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg);
     
     void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
 
     
-    // TESTING END
+    // CUSTOM CODE END
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
     
     uint16_t node_id_;
@@ -85,7 +85,7 @@ private:
     std::condition_variable fresh_heartbeat_;
     rclcpp::Service<AxisState>::SharedPtr service_;
 
-    //TESTING START
+    //CUSTOM CODE START
     std::mutex gains_msg_mutex_;
     ControlGains gains_msg_ = ControlGains();
     rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
@@ -107,19 +107,19 @@ private:
 
 
 
-    //TESTING END
+    //CUSTOM CODE END
 
 
 
 
-    // TESTING START
+    // CUSTOM CODE START
     short int odrv_advanced_ctrl_pub_flag_ = 0;
     short int odrv_advanced_pub_flag_ = 0;
     std::mutex odrv_advanced_stat_mutex_;
     ODriveStatusAdvanced odrv_advanced_stat_ = ODriveStatusAdvanced();
     rclcpp::Publisher<ODriveStatusAdvanced>::SharedPtr odrv_advanced_publisher_;
 
-    // TESTING END
+    // CUSTOM CODE END
 
 };
 
