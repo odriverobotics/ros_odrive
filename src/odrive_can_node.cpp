@@ -57,7 +57,7 @@ enum CmdId : uint32_t {
     kSetAbsolutePostion = 0x019,
     kSetPosGain = 0x01a,    
    
-    kSetVelGains = 0x01b,           //ControlGains - Subscriber (The protocol for setting the velocity and velocity integrator gains)
+    kSetVelGains = 0x01b,           //ControlVelocityGains - Subscriber (The protocol for setting the velocity and velocity integrator gains)
     // CUSTOM CODE END
 
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
@@ -102,9 +102,9 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     odrv_advanced_publisher_ = rclcpp::Node::create_publisher<ODriveStatusAdvanced>("odrive_status_advanced", odrv_advanced_stat_qos);
 
     
-    //Creates the subscriber for the ControlGains messages
+    //Creates the subscriber for the ControlVelocityGains messages
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepLast(10));
-    gains_subscriber_ = rclcpp::Node::create_subscription<ControlGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+    gains_subscriber_ = rclcpp::Node::create_subscription<ControlVelocityGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
 
    
     //Creates the service for read and writing to arbitrary values
@@ -479,7 +479,7 @@ void ODriveCanNode::ctrl_msg_callback() {
 // Trying to send an advanced control message
 
 
-void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg) {
+void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg) {
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "Velocity gains callback called");
     RCLCPP_INFO(rclcpp::Node::get_logger(), "vel gain: %f", msg->vel_gain);
@@ -510,6 +510,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
     can_intf_.send_can_frame(vel_int_limit_frame);
 
 
+    // this will send a CAN message to set the vel_limit value to the one specified in the message
     struct can_frame vel_limit_frame;
     vel_limit_frame.can_id = node_id_ << 5 | kRxSdo;
     {
@@ -522,7 +523,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
 
 
 
-    RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS UPDATED!!!");
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "Velocity Gains Updated!!!");
     
     
 }

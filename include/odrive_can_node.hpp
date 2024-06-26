@@ -10,7 +10,7 @@
 
 // CUSTOM CODE START
 #include "odrive_can/msg/o_drive_status_advanced.hpp"
-#include "odrive_can/msg/control_gains.hpp"
+#include "odrive_can/msg/control_velocity_gains.hpp"
 #include "odrive_can/srv/value_access.hpp"
 // CUSTOM CODE END
 
@@ -32,7 +32,7 @@ using ControlMessage = odrive_can::msg::ControlMessage;
 
 using ODriveStatusAdvanced = odrive_can::msg::ODriveStatusAdvanced;
 
-using ControlGains = odrive_can::msg::ControlGains;
+using ControlVelocityGains = odrive_can::msg::ControlVelocityGains;
 
 using ValueAccess = odrive_can::srv::ValueAccess;
 
@@ -53,11 +53,11 @@ private:
     void request_state_callback();
     void ctrl_msg_callback();
     // CUSTOM CODE START
-    void control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg);
+    void control_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
     
     void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
 
-    
+     
     // CUSTOM CODE END
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
     
@@ -87,8 +87,8 @@ private:
 
     //CUSTOM CODE START
     std::mutex gains_msg_mutex_;
-    ControlGains gains_msg_ = ControlGains();
-    rclcpp::Subscription<ControlGains>::SharedPtr gains_subscriber_;
+    ControlVelocityGains gains_msg_ = ControlVelocityGains();
+    rclcpp::Subscription<ControlVelocityGains>::SharedPtr gains_subscriber_;
 
 
 

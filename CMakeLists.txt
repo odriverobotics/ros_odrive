@@ -15,8 +15,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ControllerStatus.msg"
   "msg/ODriveStatus.msg"
   "msg/ODriveStatusAdvanced.msg"
-  "msg/ControlGains.msg"
-  "srv/AxisState.srv"
+  "msg/ControlVelocityGains.msg"
+  "srv/AxisState.srv" 
   "srv/ValueAccess.srv"
   
 )
