@@ -481,11 +481,12 @@ void ODriveCanNode::ctrl_msg_callback() {
 
 void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::SharedPtr msg) {
 
-    RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS FEEDBACK!!!");
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "Velocity gains callback called");
     RCLCPP_INFO(rclcpp::Node::get_logger(), "vel gain: %f", msg->vel_gain);
     RCLCPP_INFO(rclcpp::Node::get_logger(), "vel integrator gain: %f", msg->vel_integrator_gain);
 
 
+    // This will used the set_vel_gains protocol to set the vel_gain and vel_integrator_gain
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kSetVelGains;
     {
@@ -495,6 +496,31 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlGains::
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
+
+
+    // this will send a CAN message to set the vel_integrator_limit value to the one specified in the message
+    struct can_frame vel_int_limit_frame;
+    vel_int_limit_frame.can_id = node_id_ << 5 | kRxSdo;
+    {
+        write_le<uint8_t>(1, vel_int_limit_frame.data);
+        write_le<uint16_t>(403, vel_int_limit_frame.data + 1);
+        write_le<float>(msg->vel_integrator_limit,   vel_int_limit_frame.data + 4);
+    }
+    vel_int_limit_frame.can_dlc = 8;
+    can_intf_.send_can_frame(vel_int_limit_frame);
+
+
+    struct can_frame vel_limit_frame;
+    vel_limit_frame.can_id = node_id_ << 5 | kRxSdo;
+    {
+        write_le<uint8_t>(1, vel_limit_frame.data);
+        write_le<uint16_t>(404, vel_limit_frame.data + 1);
+        write_le<float>(msg->vel_limit,   vel_limit_frame.data + 4);
+    }
+    vel_limit_frame.can_dlc = 8;
+    can_intf_.send_can_frame(vel_limit_frame);
+
+
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "GAINS UPDATED!!!");
     
