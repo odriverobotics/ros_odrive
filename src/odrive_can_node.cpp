@@ -167,10 +167,6 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     can_intf_.send_can_frame(frame);
     }
 
-
-    
-    
-
     RCLCPP_INFO(this->get_logger(), "Set endpoint");
 
 
@@ -569,7 +565,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocit
 
 
 
-// void ODriveCanNode::load_config(string filePath){
+// void ODriveCanNode::load_config(){
 //     RCLCPP_INFO(rclcpp::Node::get_logger(), "Loading config values from file");
     
 
