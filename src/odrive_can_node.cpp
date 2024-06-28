@@ -111,6 +111,14 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS value_access_srv_qos(rclcpp::KeepLast(10));
     value_access_service_ = rclcpp::Node::create_service<ValueAccess>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
 
+    this->declare_parameter<float>("endpoint_id_139", 0.0);
+
+    // Retrieve the parameter value
+    float endpoint_id_139 = this->get_parameter("endpoint_id_139").as_double();
+
+    RCLCPP_INFO(this->get_logger(), "Button %f pressed, toggling state", endpoint_id_139);
+
+
 
 
     // CUSTOM CODE END
@@ -532,7 +540,16 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocit
 // CUSTOM CODE END
 
 
+// CUSTOM CODE START
 
+
+
+void ODriveCanNode::load_config(string filePath){
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "Loading config values from file");
+    
+
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "Loaded config files");
+}
 
 
 
