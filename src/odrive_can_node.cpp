@@ -544,12 +544,12 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocit
 
 
 
-void ODriveCanNode::load_config(string filePath){
-    RCLCPP_INFO(rclcpp::Node::get_logger(), "Loading config values from file");
+// void ODriveCanNode::load_config(string filePath){
+//     RCLCPP_INFO(rclcpp::Node::get_logger(), "Loading config values from file");
     
 
-    RCLCPP_INFO(rclcpp::Node::get_logger(), "Loaded config files");
-}
+//     RCLCPP_INFO(rclcpp::Node::get_logger(), "Loaded config files");
+// }
 
 
 
