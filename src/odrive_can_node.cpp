@@ -116,7 +116,21 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     // Retrieve the parameter value
     float endpoint_id_139 = this->get_parameter("endpoint_id_139").as_double();
 
-    RCLCPP_INFO(this->get_logger(), "Button %f pressed, toggling state", endpoint_id_139);
+    RCLCPP_INFO(this->get_logger(), "Endpoint 139 should be loaded to be %f ", endpoint_id_139);
+
+    // This will set the ednpoint of 139
+    {
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kRxSdo;
+    {
+         write_le<uint8_t>(1, frame.data);
+        write_le<uint16_t>(139, frame.data + 1);
+        write_le<float>(endpoint_id_139,   frame.data + 4);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
+    }
+    
 
 
 
