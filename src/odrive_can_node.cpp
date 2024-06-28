@@ -111,25 +111,6 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS value_access_srv_qos(rclcpp::KeepLast(10));
     value_access_service_ = rclcpp::Node::create_service<ValueAccess>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
 
-    this->declare_parameter<float>("endpoint_id_139", 0.0);
-
-    // Retrieve the parameter value
-    float endpoint_id_139 = this->get_parameter("endpoint_id_139").as_double();
-
-    RCLCPP_INFO(this->get_logger(), "Endpoint 139 should be loaded to be %f ", endpoint_id_139);
-
-    // This will set the ednpoint of 139
-    {
-    struct can_frame frame;
-    frame.can_id = node_id_ << 5 | kRxSdo;
-    {
-         write_le<uint8_t>(1, frame.data);
-        write_le<uint16_t>(139, frame.data + 1);
-        write_le<float>(endpoint_id_139,   frame.data + 4);
-    }
-    frame.can_dlc = 8;
-    can_intf_.send_can_frame(frame);
-    }
     
 
 
@@ -164,6 +145,36 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     }
     RCLCPP_INFO(rclcpp::Node::get_logger(), "node_id: %d", node_id_);
     RCLCPP_INFO(rclcpp::Node::get_logger(), "interface: %s", interface.c_str());
+
+
+    this->declare_parameter<float>("endpoint_id_139", 0.0);
+
+    // Retrieve the parameter value
+    float endpoint_id_139 = this->get_parameter("endpoint_id_139").as_double();
+
+    RCLCPP_INFO(this->get_logger(), "Endpoint 139 should be loaded to be %f ", endpoint_id_139);
+
+    // This will set the ednpoint of 139
+    {
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kRxSdo;
+    {
+        write_le<uint8_t>(1, frame.data);
+        write_le<uint16_t>(139, frame.data + 1);
+        write_le<float>(endpoint_id_139,   frame.data + 4);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
+    }
+
+
+    
+    
+
+    RCLCPP_INFO(this->get_logger(), "Set endpoint");
+
+
+
     return true;
 }
 
