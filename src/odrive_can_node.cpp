@@ -724,6 +724,8 @@ bool ODriveCanNode::settingsFromConfig(){
         RCLCPP_INFO(this->get_logger(), "LOADING odrive config values");
 
         std::map<std::string, int> bool_parameter_map;
+        bool_parameter_map["axis0.config.enable_watchdog"] = 219;
+        bool_parameter_map["axis0.controller.config.enable_torque_mode_vel_limit"] = 394;
 
         std::map<std::string, int> float_parameter_map;
 
