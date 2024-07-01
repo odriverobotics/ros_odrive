@@ -722,6 +722,7 @@ bool ODriveCanNode::settingsFromConfig(){
         std::map<std::string, int> uint32_parameter_map;
 
         uint32_parameter_map["control_loop_hz"] = 4;
+        uint32_parameter_map["axis0.config.can.heartbeat_msg_rate_ms"] = 249;
         
         
         std::map<std::string, int> uint16_parameter_map;
