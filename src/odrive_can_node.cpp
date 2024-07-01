@@ -705,7 +705,7 @@ bool ODriveCanNode::settingsFromConfig(){
 
         RCLCPP_INFO(this->get_logger(), "LOADING odrive config values");
 
-        std::vector<std::string> float_parameter_names = {"endpoint_id_139"};
+        std::vector<std::string> float_parameter_names = {"endpoint_id_139","endpoint_id_140","endpoint_id_141","endpoint_id_142","endpoint_id_143"};
 
         // Loop through the list of float parameter names and for each of them call setFloatParameter
 
