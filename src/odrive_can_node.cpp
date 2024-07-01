@@ -723,7 +723,7 @@ bool ODriveCanNode::settingsFromConfig(){
     }catch(const std::runtime_error& e){
         RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL CONFIG VALUES FOR ODRIVE");
 
-        RCLCPP_ERROR(this->get_logger(), "%s", e);
+        // RCLCPP_ERROR(this->get_logger(), "%s", e);
 
         return false;
 
