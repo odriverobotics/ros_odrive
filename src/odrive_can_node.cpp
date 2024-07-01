@@ -721,7 +721,7 @@ bool ODriveCanNode::settingsFromConfig(){
 
         std::map<std::string, int> uint32_parameter_map;
 
-        uint32_parameter_map["control_loop_hz"] = 4;
+        // uint32_parameter_map["control_loop_hz"] = 4;
         uint32_parameter_map["axis0.config.can.heartbeat_msg_rate_ms"] = 249;
         
         
@@ -927,8 +927,8 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
     //  - If not then don't set the parameter
     if (this->has_parameter(parameter_name)) {
         // Retrieve the parameter value
-        float endpoint_id = this->get_parameter(parameter_name).as_double();
-        RCLCPP_INFO(this->get_logger(), "%s should be loaded to be %f ",parameter_name.c_str(), endpoint_id);
+        
+        // RCLCPP_INFO(this->get_logger(), "%s should be loaded to be %f ",parameter_name.c_str(), endpoint_id);
         // This will set the endpoint of 139 to be the passed in value through a CAN bus message
     
         struct can_frame frame;
@@ -942,42 +942,49 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
                 case 0: {
                  // bool
                     // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was bool");
+                    bool endpoint_id = this->get_parameter(parameter_name).as_bool();
                     write_le<bool>(endpoint_id,   frame.data + 4);
                     break;
                 }
                 case 1: {
                     // float32
                     // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was float32");
+                    float endpoint_id = this->get_parameter(parameter_name).as_double();
                     write_le<float>(endpoint_id,   frame.data + 4);
                     break;
                 }
                 case 2: {
                     // int32
                     // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+                    int32_t endpoint_id = this->get_parameter(parameter_name).as_int();
                     write_le<int32_t>(endpoint_id,   frame.data + 4);
                     break;
                 }
                 case 3: {
                     // uint64
-                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
+                    // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
+                    uint64_t endpoint_id = this->get_parameter(parameter_name).as_int();
                     write_le<uint64_t>(endpoint_id,   frame.data + 4);
                     break;
                 }    
                 case 4: {
                     // uint32
-                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
+                    // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
+                    uint32_t endpoint_id = this->get_parameter(parameter_name).as_int();
                     write_le<uint32_t>(endpoint_id,   frame.data + 4);
                     break;
                 }
                 case 5: {
                     // uint16
-                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
+                    // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
+                    uint16_t endpoint_id = this->get_parameter(parameter_name).as_int();
                     write_le<uint16_t>(endpoint_id,   frame.data + 4);
                     break;
                 }
                 case 6: {
                     // uint8
-                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
+                    // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
+                    uint8_t endpoint_id = this->get_parameter(parameter_name).as_int();
                     write_le<uint8_t>(endpoint_id,   frame.data + 4);
                     break;
                 }
