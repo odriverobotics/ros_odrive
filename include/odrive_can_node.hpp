@@ -121,6 +121,13 @@ private:
 
     // CUSTOM CODE END
 
+
+    // CUSTOM CODE START
+
+    bool settingsFromConfig();
+
+    // CUSTOM CODE END
+
 };
 
 #endif // ODRIVE_CAN_NODE_HPP

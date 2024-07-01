@@ -147,29 +147,9 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     RCLCPP_INFO(rclcpp::Node::get_logger(), "interface: %s", interface.c_str());
 
 
-    this->declare_parameter<float>("endpoint_id_139", 0.0);
+    
 
-    // Retrieve the parameter value
-    float endpoint_id_139 = this->get_parameter("endpoint_id_139").as_double();
-
-    RCLCPP_INFO(this->get_logger(), "Endpoint 139 should be loaded to be %f ", endpoint_id_139);
-
-    // This will set the ednpoint of 139
-    {
-    struct can_frame frame;
-    frame.can_id = node_id_ << 5 | kRxSdo;
-    {
-        write_le<uint8_t>(1, frame.data);
-        write_le<uint16_t>(139, frame.data + 1);
-        write_le<float>(endpoint_id_139,   frame.data + 4);
-    }
-    frame.can_dlc = 8;
-    can_intf_.send_can_frame(frame);
-    }
-
-    RCLCPP_INFO(this->get_logger(), "Set endpoint");
-
-
+    bool set_config_correctly = settingsFromConfig();
 
     return true;
 }
@@ -703,9 +683,62 @@ void ODriveCanNode::value_access_service_callback(const std::shared_ptr<ValueAcc
 
 // CUSTOM CODE END
 
+
+
+
+
+
 inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
     bool valid = expected == length;
     RCLCPP_DEBUG(rclcpp::Node::get_logger(), "received %s", name.c_str());
     if (!valid) RCLCPP_WARN(rclcpp::Node::get_logger(), "Incorrect %s frame length: %d != %d", name.c_str(), length, expected);
     return valid;
 }
+
+
+// CUSTOM CODE START
+
+bool settingsFromConfig(){
+    try{
+        // Trying to set all of the odrive settings from a config file
+        // return true if you succeed and false if there is an error
+
+        RCLCPP_INFO(this->get_logger(), "LOADING odrive config values");
+
+        this->declare_parameter<float>("endpoint_id_139", 0.0);
+
+        // Retrieve the parameter value
+        float endpoint_id_139 = this->get_parameter("endpoint_id_139").as_double();
+
+        RCLCPP_INFO(this->get_logger(), "Endpoint 139 should be loaded to be %f ", endpoint_id_139);
+
+        // This will set the endpoint of 139 to be the passed in value through a CAN bus message
+        {
+            struct can_frame frame;
+            frame.can_id = node_id_ << 5 | kRxSdo;
+            {
+                write_le<uint8_t>(1, frame.data);
+                write_le<uint16_t>(139, frame.data + 1);
+                write_le<float>(endpoint_id_139,   frame.data + 4);
+            }
+            frame.can_dlc = 8;
+            can_intf_.send_can_frame(frame);
+        }
+
+        RCLCPP_INFO(this->get_logger(), "LOADED odrive config values");
+
+        return true;
+
+    }catch(e){
+        RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL CONFIG VALUES FOR ODRIVE");
+
+        RCLCPP_ERROR(this->get_logger(), "%s", e);
+
+        return false;
+
+    }
+
+    
+}
+
+// CUSTOM CODE END
