@@ -745,7 +745,7 @@ bool ODriveCanNode::settingsFromConfig(){
 }
 
 
-void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpoint_id, uint32 datatype_specifier){
+void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpoint_id, uint32_t datatype_specifier){
     // Function to set a float parameter to a specific value using the CAN bus
 
     // parameter_name is a string that contains the name of the parameter that has been passed in via the launch file
