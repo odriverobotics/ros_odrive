@@ -741,6 +741,9 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["axis0.config.torque_soft_max"] = 268;
         float_parameter_map["axis0.config.motor.current_soft_max"] = 287;
         float_parameter_map["axis0.config.motor.current_hard_max"] = 288;
+        float_parameter_map["axis0.controller.config.inertia"] = 416;
+        float_parameter_map["axis0.controller.config.spinout_mechanical_power_threshold"] = 420;
+        float_parameter_map["axis0.controller.config.spinout_electrical_power_threshold"] = 421;
 
         std::map<std::string, int> int32_parameter_map;
 
