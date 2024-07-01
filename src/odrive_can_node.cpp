@@ -707,7 +707,7 @@ bool ODriveCanNode::settingsFromConfig(){
 
         std::map<std::string, int> float_parameter_map;
 
-        float_parameter_map["endpoint_id_139"] = 139;
+        float_parameter_map["config.max_regen_current"] = 139;
         float_parameter_map["endpoint_id_140"] = 140;
         float_parameter_map["endpoint_id_141"] = 141;
         float_parameter_map["endpoint_id_142"] = 142;
