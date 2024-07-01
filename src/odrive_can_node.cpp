@@ -721,8 +721,15 @@ bool ODriveCanNode::settingsFromConfig(){
 
         std::map<std::string, int> uint32_parameter_map;
 
-        // uint32_parameter_map["control_loop_hz"] = 4;
+        uint32_parameter_map["control_loop_hz"] = 4;
         uint32_parameter_map["axis0.config.can.heartbeat_msg_rate_ms"] = 249;
+        uint32_parameter_map["axis0.config.can.encoder_msg_rate_ms"] = 250;
+        uint32_parameter_map["axis0.config.can.iq_msg_rate_ms"] = 251;
+        uint32_parameter_map["axis0.config.can.error_msg_rate_ms"] = 252;
+        uint32_parameter_map["axis0.config.can.temperature_msg_rate_ms"] = 253;
+        uint32_parameter_map["axis0.config.can.bus_voltage_msg_rate_ms"] = 254;
+        uint32_parameter_map["axis0.config.can.torques_msg_rate_ms"] = 255;
+        uint32_parameter_map["axis0.config.can.powers_msg_rate_ms"] = 256;
         
         
         std::map<std::string, int> uint16_parameter_map;
@@ -889,30 +896,6 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
             this->declare_parameter<int>(parameter_name, 0);
             break;
         }
-        // case 3: {
-        //     // uint64
-        //     // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
-        //     this->declare_parameter<uint64_t>(parameter_name, 0);
-        //     break;
-        // }    
-        // case 4: {
-        //     // uint32
-        //     // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
-        //     this->declare_parameter<uint32_t>(parameter_name, 0);
-        //     break;
-        // }
-        // case 5: {
-        //     // uint16
-        //     // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
-        //    this->declare_parameter<uint16_t>(parameter_name, 0);
-        //     break;
-        // }
-        // case 6: {
-        //     // uint8
-        //     // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
-        //     this->declare_parameter<uint8_t>(parameter_name, 0);
-        //     break;
-        // }
         default: 
             
             RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", datatype_specifier);
