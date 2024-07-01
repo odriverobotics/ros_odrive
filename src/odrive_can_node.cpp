@@ -737,6 +737,15 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["config.inverter0.current_soft_max"] = 183;
         float_parameter_map["config.inverter0.current_hard_max"] = 184;
         float_parameter_map["axis0.config.watchdog_timeout"] = 218; 
+
+        float_parameter_map["axis0.config.I_bus_hard_min"] = 261;
+        float_parameter_map["axis0.config.I_bus_hard_max"] = 262;
+        float_parameter_map["axis0.config.I_bus_soft_min"] = 263;
+        float_parameter_map["axis0.config.I_bus_soft_max"] = 264;
+        float_parameter_map["axis0.config.P_bus_soft_min"] = 265;
+        float_parameter_map["axis0.config.P_bus_soft_max"] = 266;
+
+        
         float_parameter_map["axis0.config.torque_soft_min"] = 267;
         float_parameter_map["axis0.config.torque_soft_max"] = 268;
         float_parameter_map["axis0.config.motor.current_soft_max"] = 287;
