@@ -12,6 +12,8 @@
 #include "odrive_can/msg/o_drive_status_advanced.hpp"
 #include "odrive_can/msg/control_velocity_gains.hpp"
 #include "odrive_can/srv/value_access.hpp"
+#include <string>
+#include <vector>
 // CUSTOM CODE END
 
 #include <mutex>
@@ -125,6 +127,8 @@ private:
     // CUSTOM CODE START
 
     bool settingsFromConfig();
+
+    void setFloatParameter(std::string parameter_name);
 
     // CUSTOM CODE END
 

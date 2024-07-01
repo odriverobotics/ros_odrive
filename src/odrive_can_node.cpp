@@ -705,25 +705,16 @@ bool ODriveCanNode::settingsFromConfig(){
 
         RCLCPP_INFO(this->get_logger(), "LOADING odrive config values");
 
-        this->declare_parameter<float>("endpoint_id_139", 0.0);
+        vector<std::string> float_parameter_names = {"endpoint_id_139"};
 
-        // Retrieve the parameter value
-        float endpoint_id_139 = this->get_parameter("endpoint_id_139").as_double();
+        // Loop through the list of float parameter names and for each of them call setFloatParameter
 
-        RCLCPP_INFO(this->get_logger(), "Endpoint 139 should be loaded to be %f ", endpoint_id_139);
-
-        // This will set the endpoint of 139 to be the passed in value through a CAN bus message
-        {
-            struct can_frame frame;
-            frame.can_id = node_id_ << 5 | kRxSdo;
-            {
-                write_le<uint8_t>(1, frame.data);
-                write_le<uint16_t>(139, frame.data + 1);
-                write_le<float>(endpoint_id_139,   frame.data + 4);
-            }
-            frame.can_dlc = 8;
-            can_intf_.send_can_frame(frame);
+        for (size_t i = 0; i < float_parameter_names.size(); ++i) {
+            setFloatParameter(float_parameter_names[i]);
         }
+
+
+
 
         RCLCPP_INFO(this->get_logger(), "LOADED odrive config values");
 
@@ -741,6 +732,31 @@ bool ODriveCanNode::settingsFromConfig(){
     return false;
 
     
+}
+
+
+void ODriveCanNode::setFloatParameter(std::string parameter_name){
+
+    this->declare_parameter<float>(parameter_name, 0.0);
+
+        // Retrieve the parameter value
+        float endpoint_id = this->get_parameter(parameter_name).as_double();
+
+        RCLCPP_INFO(this->get_logger(), "%s should be loaded to be %f ",parameter_name, endpoint_id);
+
+        // This will set the endpoint of 139 to be the passed in value through a CAN bus message
+        {
+            struct can_frame frame;
+            frame.can_id = node_id_ << 5 | kRxSdo;
+            {
+                write_le<uint8_t>(1, frame.data);
+                write_le<uint16_t>(139, frame.data + 1);
+                write_le<float>(endpoint_id,   frame.data + 4);
+            }
+            frame.can_dlc = 8;
+            can_intf_.send_can_frame(frame);
+        }
+
 }
 
 // CUSTOM CODE END
