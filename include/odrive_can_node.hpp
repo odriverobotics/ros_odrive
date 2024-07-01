@@ -127,7 +127,7 @@ private:
 
     bool settingsFromConfig();
 
-    void setFloatParameter(std::string parameter_name, int parameter_endpoint_id);
+    void setParameter(std::string parameter_name, int parameter_endpoint_id, uint32 datatype_specifier);
 
     // CUSTOM CODE END
 

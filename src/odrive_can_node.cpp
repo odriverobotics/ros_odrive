@@ -719,8 +719,10 @@ bool ODriveCanNode::settingsFromConfig(){
 
         for (auto it = float_parameter_map.begin(); it != float_parameter_map.end(); ++it) {
             try{
-            setFloatParameter(it->first,it->second);
-             }catch(const std::runtime_error& e){
+
+                setParameter(it->first,it->second, 1);
+
+             } catch (const std::runtime_error& e){
             
             RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL CONFIG VALUES FOR ODRIVE");
 
@@ -743,12 +745,66 @@ bool ODriveCanNode::settingsFromConfig(){
 }
 
 
-void ODriveCanNode::setFloatParameter(std::string parameter_name, int parameter_endpoint_id){
+void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpoint_id, uint32 datatype_specifier){
     // Function to set a float parameter to a specific value using the CAN bus
 
+    // parameter_name is a string that contains the name of the parameter that has been passed in via the launch file
+    // parameter_endpoint_id is an integer that specifies the endpoint where the value should be updated
+    // datatype_specifier is an uint32 that specifies what data type we are working with
+    // - (0 - bool, 1 - float32, 2 - int32, 3 - uint64, 4 - uint32, 5 - uint16, 6 - uint8)
 
-    this->declare_parameter<float>(parameter_name, 0.0);
+    switch(datatype_specifier){
 
+        case 0: {
+         // bool
+            // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was bool");
+            this->declare_parameter<bool>(parameter_name, 0.0);
+            break;
+        }
+        case 1: {
+            // float32
+            // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was float32");
+            this->declare_parameter<float>(parameter_name, 0.0);
+            break;
+        }
+        case 2: {
+            // int32
+            // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+            this->declare_parameter<int32_t(parameter_name, 0.0);
+            break;
+        }
+        case 3: {
+            // uint64
+            RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
+            this->declare_parameter<uint64_t>(parameter_name, 0.0);
+            break;
+        }    
+        case 4: {
+            // uint32
+            RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
+            this->declare_parameter<uint32_t>(parameter_name, 0.0);
+            break;
+        }
+        case 5: {
+            // uint16
+            RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
+           this->declare_parameter<uint16_t>(parameter_name, 0.0);
+            break;
+        }
+        case 6: {
+            // uint8
+            RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
+            this->declare_parameter<uint8_t>(parameter_name, 0.0);
+            break;
+        }
+        default: 
+            
+            RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", request->data_type_specifier);
+            return;
+
+    }
+
+   
 
     // Check if the parameter has been passed in
     //  - If so then set the parameter to the passed in value
@@ -764,7 +820,59 @@ void ODriveCanNode::setFloatParameter(std::string parameter_name, int parameter_
         {
             write_le<uint8_t>(1, frame.data);
             write_le<uint16_t>(parameter_endpoint_id, frame.data + 1);
-            write_le<float>(endpoint_id,   frame.data + 4);
+
+            switch(datatype_specifier){
+
+                case 0: {
+                 // bool
+                    // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was bool");
+                    write_le<bool>(endpoint_id,   frame.data + 4);
+                    break;
+                }
+                case 1: {
+                    // float32
+                    // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was float32");
+                    write_le<float>(endpoint_id,   frame.data + 4);
+                    break;
+                }
+                case 2: {
+                    // int32
+                    // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+                    write_le<int32_t>(endpoint_id,   frame.data + 4);
+                    break;
+                }
+                case 3: {
+                    // uint64
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
+                    write_le<uint64_t>(endpoint_id,   frame.data + 4);
+                    break;
+                }    
+                case 4: {
+                    // uint32
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
+                    write_le<uint32_t>(endpoint_id,   frame.data + 4);
+                    break;
+                }
+                case 5: {
+                    // uint16
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
+                    write_le<uint16_t>(endpoint_id,   frame.data + 4);
+                    break;
+                }
+                case 6: {
+                    // uint8
+                    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
+                    write_le<uint8_t>(endpoint_id,   frame.data + 4);
+                    break;
+                }
+                default: 
+
+                    RCLCPP_ERROR(rclcpp::Node::get_logger(), "Error in sending value to can unsupported data type specified: %d", request->data_type_specifier);
+                    return;
+
+            }
+
+            
         }
         frame.can_dlc = 8;
         can_intf_.send_can_frame(frame);
@@ -772,8 +880,6 @@ void ODriveCanNode::setFloatParameter(std::string parameter_name, int parameter_
     } else {
         RCLCPP_WARN(this->get_logger(), "Parameter '%s' is not set. Using default value.", parameter_name.c_str());
     }
-
-    
 
 }
 
