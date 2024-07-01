@@ -127,7 +127,7 @@ private:
 
     bool settingsFromConfig();
 
-    void setParameter(std::string parameter_name, int parameter_endpoint_id, uint32 datatype_specifier);
+    void setParameter(std::string parameter_name, int parameter_endpoint_id,  uint32_t datatype_specifier);
 
     // CUSTOM CODE END
 

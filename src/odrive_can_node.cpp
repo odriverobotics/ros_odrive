@@ -705,6 +705,8 @@ bool ODriveCanNode::settingsFromConfig(){
 
         RCLCPP_INFO(this->get_logger(), "LOADING odrive config values");
 
+        std::map<std::string, int> bool_parameter_map;
+
         std::map<std::string, int> float_parameter_map;
 
         float_parameter_map["config.max_regen_current"] = 139;
@@ -713,9 +715,33 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["config.dc_max_positive_current"] = 142;
         float_parameter_map["config.dc_max_negative_current"] = 143;
 
+        std::map<std::string, int> int32_parameter_map;
+
+        std::map<std::string, int> uint64_parameter_map;
+
+        std::map<std::string, int> uint32_parameter_map;
+        
+        std::map<std::string, int> uint16_parameter_map;
+
+        std::map<std::string, int> uint8_parameter_map;
+
+
+
 
 
         // Loop through the list of float parameter names and for each of them call setFloatParameter
+
+        for (auto it = bool_parameter_map.begin(); it != bool_parameter_map.end(); ++it) {
+            try{
+
+                setParameter(it->first,it->second, 0);
+
+             } catch (const std::runtime_error& e){
+            
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL bool CONFIG VALUES FOR ODRIVE");
+            }
+        }
+
 
         for (auto it = float_parameter_map.begin(); it != float_parameter_map.end(); ++it) {
             try{
@@ -724,15 +750,77 @@ bool ODriveCanNode::settingsFromConfig(){
 
              } catch (const std::runtime_error& e){
             
-            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL CONFIG VALUES FOR ODRIVE");
-
-        // RCLCPP_ERROR(this->get_logger(), "%s", e);
-
-        // return false;
-
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL FLOAT CONFIG VALUES FOR ODRIVE");
             }
+        }
+
+
+
+        for (auto it = int32_parameter_map.begin(); it != int32_parameter_map.end(); ++it) {
+            try{
+
+                setParameter(it->first,it->second, 2);
+
+             } catch (const std::runtime_error& e){
+            
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL int32 CONFIG VALUES FOR ODRIVE");
             }
+        }
+
+
+
+        for (auto it = uint64_parameter_map.begin(); it != uint64_parameter_map.end(); ++it) {
+            try{
+
+                setParameter(it->first,it->second, 3);
+
+             } catch (const std::runtime_error& e){
+            
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL uint64 CONFIG VALUES FOR ODRIVE");
+            }
+        }
         
+
+
+        for (auto it = uint32_parameter_map.begin(); it != uint32_parameter_map.end(); ++it) {
+            try{
+
+                setParameter(it->first,it->second, 4);
+
+             } catch (const std::runtime_error& e){
+            
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL uint32  CONFIG VALUES FOR ODRIVE");
+            }
+        }
+        
+
+
+
+        for (auto it = uint16_parameter_map.begin(); it != uint16_parameter_map.end(); ++it) {
+            try{
+
+                setParameter(it->first,it->second, 5);
+
+             } catch (const std::runtime_error& e){
+            
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL uint16 CONFIG VALUES FOR ODRIVE");
+            }
+        }
+        
+
+
+
+
+        for (auto it = uint8_parameter_map.begin(); it != uint8_parameter_map.end(); ++it) {
+            try{
+
+                setParameter(it->first,it->second, 6);
+
+             } catch (const std::runtime_error& e){
+            
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL uint8 CONFIG VALUES FOR ODRIVE");
+            }
+        }
 
 
 
