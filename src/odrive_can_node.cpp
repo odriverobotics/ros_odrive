@@ -736,26 +736,36 @@ bool ODriveCanNode::settingsFromConfig(){
 
 
 void ODriveCanNode::setFloatParameter(std::string parameter_name){
+    // Function to set a float parameter to a specific value using the CAN bus
+
 
     this->declare_parameter<float>(parameter_name, 0.0);
 
+
+    // Check if the parameter has been passed in
+    //  - If so then set the parameter to the passed in value
+    //  - If not then don't set the parameter
+    if (this->has_parameter(parameter_name)) {
         // Retrieve the parameter value
         float endpoint_id = this->get_parameter(parameter_name).as_double();
-
         RCLCPP_INFO(this->get_logger(), "%s should be loaded to be %f ",parameter_name.c_str(), endpoint_id);
-
         // This will set the endpoint of 139 to be the passed in value through a CAN bus message
+    
+        struct can_frame frame;
+        frame.can_id = node_id_ << 5 | kRxSdo;
         {
-            struct can_frame frame;
-            frame.can_id = node_id_ << 5 | kRxSdo;
-            {
-                write_le<uint8_t>(1, frame.data);
-                write_le<uint16_t>(139, frame.data + 1);
-                write_le<float>(endpoint_id,   frame.data + 4);
-            }
-            frame.can_dlc = 8;
-            can_intf_.send_can_frame(frame);
+            write_le<uint8_t>(1, frame.data);
+            write_le<uint16_t>(139, frame.data + 1);
+            write_le<float>(endpoint_id,   frame.data + 4);
         }
+        frame.can_dlc = 8;
+        can_intf_.send_can_frame(frame);
+
+    } else {
+        RCLCPP_WARN(this->get_logger(), "Parameter '%s' is not set. Using default value.", parameter_name.c_str());
+    }
+
+    
 
 }
 
