@@ -734,6 +734,9 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["config.dc_bus_overvoltage_trip_level"] = 141;
         float_parameter_map["config.dc_max_positive_current"] = 142;
         float_parameter_map["config.dc_max_negative_current"] = 143;
+        float_parameter_map["config.inverter0.current_soft_max"] = 183;
+        float_parameter_map["config.inverter0.current_hard_max"] = 184;
+        float_parameter_map["axis0.config.watchdog_timeout"] = 218;
 
         std::map<std::string, int> int32_parameter_map;
 
