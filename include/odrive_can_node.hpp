@@ -80,7 +80,6 @@ private:
     std::mutex ctrl_msg_mutex_;
     ControlMessage ctrl_msg_ = ControlMessage();
     rclcpp::Subscription<ControlMessage>::SharedPtr subscriber_;
-, int parameter_endpoint_id
     EpollEvent srv_evt_;
     uint32_t axis_state_;
     std::mutex axis_state_mutex_;
