@@ -858,7 +858,7 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
         case 2: {
             // int32
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
-            this->declare_parameter<int32_t(parameter_name, 0.0);
+            this->declare_parameter<int32_t>(parameter_name, 0.0);
             break;
         }
         case 3: {
