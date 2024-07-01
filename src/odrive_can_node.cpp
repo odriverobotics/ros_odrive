@@ -742,7 +742,7 @@ void ODriveCanNode::setFloatParameter(std::string parameter_name){
         // Retrieve the parameter value
         float endpoint_id = this->get_parameter(parameter_name).as_double();
 
-        RCLCPP_INFO(this->get_logger(), "%s should be loaded to be %f ",parameter_name, endpoint_id);
+        RCLCPP_INFO(this->get_logger(), "%s should be loaded to be %f ",parameter_name.c_str(), endpoint_id);
 
         // This will set the endpoint of 139 to be the passed in value through a CAN bus message
         {
