@@ -720,6 +720,9 @@ bool ODriveCanNode::settingsFromConfig(){
         std::map<std::string, int> uint64_parameter_map;
 
         std::map<std::string, int> uint32_parameter_map;
+
+        uint32_parameter_map["control_loop_hz"] = 4;
+        
         
         std::map<std::string, int> uint16_parameter_map;
 
@@ -856,6 +859,30 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
             break;
         }
         case 2: {
+            // int32
+            // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+            this->declare_parameter<int>(parameter_name, 0);
+            break;
+        }
+        case 3: {
+            // int32
+            // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+            this->declare_parameter<int>(parameter_name, 0);
+            break;
+        }
+        case 4: {
+            // int32
+            // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+            this->declare_parameter<int>(parameter_name, 0);
+            break;
+        }
+        case 5: {
+            // int32
+            // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
+            this->declare_parameter<int>(parameter_name, 0);
+            break;
+        }
+        case 6: {
             // int32
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
             this->declare_parameter<int>(parameter_name, 0);
