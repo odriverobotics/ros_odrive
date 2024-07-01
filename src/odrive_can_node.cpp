@@ -285,6 +285,24 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
         // CUSTOM CODE START
 
+        case CmdId::kGetPowers: {
+            if (!verify_length("kGetPowers", 8, frame.can_dlc)) break;
+            std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
+            // ctrl_stat_.torque_target   = read_le<float>(frame.data + 0);
+            // ctrl_stat_.torque_estimate = read_le<float>(frame.data + 4);
+            // ctrl_pub_flag_ |= 0b1000; 
+
+            // // CUSTOM CODE START
+            // std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
+            // odrv_advanced_stat_.torque_target   = read_le<float>(frame.data + 0);
+            // odrv_advanced_stat_.torque_estimate = read_le<float>(frame.data + 4);
+            
+            // odrv_advanced_ctrl_pub_flag_ |= 0b1000;
+            // CUSTOM CODE END
+
+            break;
+        }
+
         case CmdId::kTxSdo: {
             if (!verify_length("kTxSdo", 8, frame.can_dlc)) break;
             {
@@ -729,7 +747,7 @@ bool ODriveCanNode::settingsFromConfig(){
         uint32_parameter_map["axis0.config.can.temperature_msg_rate_ms"] = 253;
         uint32_parameter_map["axis0.config.can.bus_voltage_msg_rate_ms"] = 254;
         uint32_parameter_map["axis0.config.can.torques_msg_rate_ms"] = 255;
-        uint32_parameter_map["axis0.config.can.powers_msg_rate_ms"] = 256;
+        uint32_parameter_map["axis0.config.can.powers_msg_rate_ms"] = ;
         
         
         std::map<std::string, int> uint16_parameter_map;
