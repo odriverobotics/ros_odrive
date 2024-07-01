@@ -708,10 +708,10 @@ bool ODriveCanNode::settingsFromConfig(){
         std::map<std::string, int> float_parameter_map;
 
         float_parameter_map["config.max_regen_current"] = 139;
-        float_parameter_map["endpoint_id_140"] = 140;
-        float_parameter_map["endpoint_id_141"] = 141;
-        float_parameter_map["endpoint_id_142"] = 142;
-        float_parameter_map["endpoint_id_143"] = 143;
+        float_parameter_map["config.dc_bus_undervoltage_trip_level"] = 140;
+        float_parameter_map["config.dc_bus_overvoltage_trip_level"] = 141;
+        float_parameter_map["config.dc_max_positive_current"] = 142;
+        float_parameter_map["config.dc_max_negative_current"] = 143;
 
 
 
