@@ -846,50 +846,43 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
         case 0: {
          // bool
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was bool");
-            rclcpp::ParameterValue(static_cast<bool>(default_value));
-            this->declare_parameter<bool>(parameter_name, 0.0);
+            this->declare_parameter<bool>(parameter_name, true);
             break;
         }
         case 1: {
             // float32
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was float32");
-            rclcpp::ParameterValue(static_cast<float>(default_value));
             this->declare_parameter<float>(parameter_name, 0.0);
             break;
         }
         case 2: {
             // int32
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was int32");
-            rclcpp::ParameterValue(static_cast<int32_t>(default_value));
-            this->declare_parameter<int32_t>(parameter_name, 0.0);
+            this->declare_parameter<int32_t>(parameter_name, 0);
             break;
         }
         case 3: {
             // uint64
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint64");
-            rclcpp::ParameterValue(static_cast<uint64_t>(default_value));
-            this->declare_parameter<uint64_t>(parameter_name, 0.0);
+            this->declare_parameter<uint64_t>(parameter_name, 0);
             break;
         }    
         case 4: {
             // uint32
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint32");
-            rclcpp::ParameterValue(static_cast<uint32_t>(default_value));
-            this->declare_parameter<uint32_t>(parameter_name, 0.0);
+            this->declare_parameter<uint32_t>(parameter_name, 0);
             break;
         }
         case 5: {
             // uint16
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint16");
-            rclcpp::ParameterValue(static_cast<uint16_t>(default_value));
-           this->declare_parameter<uint16_t>(parameter_name, 0.0);
+           this->declare_parameter<uint16_t>(parameter_name, 0);
             break;
         }
         case 6: {
             // uint8
             // RCLCPP_DEBUG(rclcpp::Node::get_logger(), "value type was uint8");
-            rclcpp::ParameterValue(static_cast<uint8_t>(default_value));
-            this->declare_parameter<uint8_t>(parameter_name, 0.0);
+            this->declare_parameter<uint8_t>(parameter_name, 0);
             break;
         }
         default: 
