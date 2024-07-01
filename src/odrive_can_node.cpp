@@ -887,7 +887,7 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
         }
         default: 
             
-            RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", request->data_type_specifier);
+            RCLCPP_ERROR(rclcpp::Node::get_logger(), "unsupported data type specified: %d", datatype_specifier);
             return;
 
     }
@@ -955,7 +955,7 @@ void ODriveCanNode::setParameter(std::string parameter_name, int parameter_endpo
                 }
                 default: 
 
-                    RCLCPP_ERROR(rclcpp::Node::get_logger(), "Error in sending value to can unsupported data type specified: %d", request->data_type_specifier);
+                    RCLCPP_ERROR(rclcpp::Node::get_logger(), "Error in sending value to can unsupported data type specified: %d", datatype_specifier);
                     return;
 
             }
