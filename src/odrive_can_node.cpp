@@ -747,7 +747,7 @@ bool ODriveCanNode::settingsFromConfig(){
         uint32_parameter_map["axis0.config.can.temperature_msg_rate_ms"] = 253;
         uint32_parameter_map["axis0.config.can.bus_voltage_msg_rate_ms"] = 254;
         uint32_parameter_map["axis0.config.can.torques_msg_rate_ms"] = 255;
-        uint32_parameter_map["axis0.config.can.powers_msg_rate_ms"] = ;
+        uint32_parameter_map["axis0.config.can.powers_msg_rate_ms"] = 256;
         
         
         std::map<std::string, int> uint16_parameter_map;
