@@ -287,7 +287,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
         case CmdId::kGetPowers: {
             if (!verify_length("kGetPowers", 8, frame.can_dlc)) break;
-            std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
+            // std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
             // ctrl_stat_.torque_target   = read_le<float>(frame.data + 0);
             // ctrl_stat_.torque_estimate = read_le<float>(frame.data + 4);
             // ctrl_pub_flag_ |= 0b1000; 
