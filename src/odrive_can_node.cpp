@@ -698,7 +698,7 @@ inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expecte
 
 // CUSTOM CODE START
 
-bool settingsFromConfig(){
+bool ODriveCanNode::settingsFromConfig(){
     try{
         // Trying to set all of the odrive settings from a config file
         // return true if you succeed and false if there is an error
