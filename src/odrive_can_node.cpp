@@ -699,19 +699,38 @@ inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expecte
 // CUSTOM CODE START
 
 bool ODriveCanNode::settingsFromConfig(){
-    try{
+    
         // Trying to set all of the odrive settings from a config file
         // return true if you succeed and false if there is an error
 
         RCLCPP_INFO(this->get_logger(), "LOADING odrive config values");
 
-        std::vector<std::string> float_parameter_names = {"endpoint_id_139","endpoint_id_140","endpoint_id_141","endpoint_id_142","endpoint_id_143"};
+        std::map<std::string, int> float_parameter_map;
+
+        float_parameter_map["endpoint_id_139"] = 139;
+        float_parameter_map["endpoint_id_140"] = 140;
+        float_parameter_map["endpoint_id_141"] = 141;
+        float_parameter_map["endpoint_id_142"] = 142;
+        float_parameter_map["endpoint_id_143"] = 143;
+
+
 
         // Loop through the list of float parameter names and for each of them call setFloatParameter
 
-        for (size_t i = 0; i < float_parameter_names.size(); ++i) {
-            setFloatParameter(float_parameter_names[i]);
-        }
+        for (auto it = float_parameter_map.begin(); it != float_parameter_map.end(); ++it) {
+            try{
+            setFloatParameter(it->first,it->second);
+             }catch(const std::runtime_error& e){
+            
+            RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL CONFIG VALUES FOR ODRIVE");
+
+        // RCLCPP_ERROR(this->get_logger(), "%s", e);
+
+        // return false;
+
+            }
+            }
+        
 
 
 
@@ -720,22 +739,11 @@ bool ODriveCanNode::settingsFromConfig(){
 
         return true;
 
-    }catch(const std::runtime_error& e){
-        RCLCPP_ERROR(this->get_logger(), "FAILED TO LOAD ALL CONFIG VALUES FOR ODRIVE");
-
-        // RCLCPP_ERROR(this->get_logger(), "%s", e);
-
-        return false;
-
-    }
-
-    return false;
-
     
 }
 
 
-void ODriveCanNode::setFloatParameter(std::string parameter_name){
+void ODriveCanNode::setFloatParameter(std::string parameter_name, int parameter_endpoint_id){
     // Function to set a float parameter to a specific value using the CAN bus
 
 
@@ -755,7 +763,7 @@ void ODriveCanNode::setFloatParameter(std::string parameter_name){
         frame.can_id = node_id_ << 5 | kRxSdo;
         {
             write_le<uint8_t>(1, frame.data);
-            write_le<uint16_t>(139, frame.data + 1);
+            write_le<uint16_t>(parameter_endpoint_id, frame.data + 1);
             write_le<float>(endpoint_id,   frame.data + 4);
         }
         frame.can_dlc = 8;
