@@ -104,7 +104,12 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     
     //Creates the subscriber for the ControlVelocityGains messages
     rclcpp::QoS gains_subscriber_qos(rclcpp::KeepLast(10));
-    gains_subscriber_ = rclcpp::Node::create_subscription<ControlVelocityGains>("control_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+    gains_subscriber_ = rclcpp::Node::create_subscription<ControlVelocityGains>("control_vel_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+
+    //Creates the subscriber for the ControlVelocityGains messages
+    rclcpp::QoS pos_gains_subscriber_qos(rclcpp::KeepLast(10));
+    pos_gains_subscriber_ = rclcpp::Node::create_subscription<ControlPositionGain>("control_pos_gains", pos_gains_subscriber_qos, std::bind(&ODriveCanNode::control_pos_gains_callback, this, _1));
+
 
    
     //Creates the service for read and writing to arbitrary values
@@ -554,6 +559,17 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocit
     RCLCPP_INFO(rclcpp::Node::get_logger(), "Velocity Gains Updated!!!");
     
     
+}
+
+void ODriveCanNode::control_pos_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg) {
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kSetPosGain;
+    {
+        std::lock_guard<std::mutex> guard(pos_gains_msg_mutex_);
+        write_le<float>(msg->pos_gain, frame.data);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
 }
 
 
