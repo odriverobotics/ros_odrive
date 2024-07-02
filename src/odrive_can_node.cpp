@@ -112,6 +112,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     value_access_service_ = rclcpp::Node::create_service<ValueAccess>("access_value", std::bind(&ODriveCanNode::value_access_service_callback, this, _1, _2), value_access_srv_qos.get_rmw_qos_profile());
 
     
+    odrv_advanced_received_powers_ = false;
 
 
 
@@ -287,17 +288,12 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 
         case CmdId::kGetPowers: {
             if (!verify_length("kGetPowers", 8, frame.can_dlc)) break;
-            // std::lock_guard<std::mutex> guard(ctrl_stat_mutex_);
-            // ctrl_stat_.torque_target   = read_le<float>(frame.data + 0);
-            // ctrl_stat_.torque_estimate = read_le<float>(frame.data + 4);
-            // ctrl_pub_flag_ |= 0b1000; 
+             // CUSTOM CODE START
+            std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
+            odrv_advanced_stat_.electrical_power    = read_le<float>(frame.data + 0);
+            odrv_advanced_stat_.mechanical_power    = read_le<float>(frame.data + 4);
 
-            // // CUSTOM CODE START
-            // std::lock_guard<std::mutex> guard1(odrv_advanced_stat_mutex_);
-            // odrv_advanced_stat_.torque_target   = read_le<float>(frame.data + 0);
-            // odrv_advanced_stat_.torque_estimate = read_le<float>(frame.data + 4);
-            
-            // odrv_advanced_ctrl_pub_flag_ |= 0b1000;
+            odrv_advanced_received_powers_ = true;
             // CUSTOM CODE END
 
             break;
@@ -398,9 +394,14 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
     if (odrv_advanced_pub_flag_ == 0b111) {
 
         if(odrv_advanced_ctrl_pub_flag_ == 0b1111){
-            odrv_advanced_publisher_->publish(odrv_advanced_stat_);
-            odrv_advanced_pub_flag_ = 0;
-            odrv_advanced_ctrl_pub_flag_ = 0;
+
+            if (odrv_advanced_received_powers_ == true){
+                odrv_advanced_publisher_->publish(odrv_advanced_stat_);
+                odrv_advanced_pub_flag_ = 0;
+                odrv_advanced_ctrl_pub_flag_ = 0;
+                odrv_advanced_received_powers_ = 0;
+            }
+            
         }
         
         
@@ -734,8 +735,6 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["config.dc_bus_overvoltage_trip_level"] = 141;
         float_parameter_map["config.dc_max_positive_current"] = 142;
         float_parameter_map["config.dc_max_negative_current"] = 143;
-        float_parameter_map["config.inverter0.current_soft_max"] = 183;
-        float_parameter_map["config.inverter0.current_hard_max"] = 184;
         float_parameter_map["axis0.config.watchdog_timeout"] = 218; 
 
         float_parameter_map["axis0.config.I_bus_hard_min"] = 261;
@@ -744,6 +743,7 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["axis0.config.I_bus_soft_max"] = 264;
         float_parameter_map["axis0.config.P_bus_soft_min"] = 265;
         float_parameter_map["axis0.config.P_bus_soft_max"] = 266;
+
 
         
         float_parameter_map["axis0.config.torque_soft_min"] = 267;
@@ -760,7 +760,6 @@ bool ODriveCanNode::settingsFromConfig(){
 
         std::map<std::string, int> uint32_parameter_map;
 
-        uint32_parameter_map["control_loop_hz"] = 4;
         uint32_parameter_map["axis0.config.can.heartbeat_msg_rate_ms"] = 249;
         uint32_parameter_map["axis0.config.can.encoder_msg_rate_ms"] = 250;
         uint32_parameter_map["axis0.config.can.iq_msg_rate_ms"] = 251;

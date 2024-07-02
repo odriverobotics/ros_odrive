@@ -120,6 +120,8 @@ private:
     ODriveStatusAdvanced odrv_advanced_stat_ = ODriveStatusAdvanced();
     rclcpp::Publisher<ODriveStatusAdvanced>::SharedPtr odrv_advanced_publisher_;
 
+    bool odrv_advanced_received_powers_;
+
     // CUSTOM CODE END
 
 
