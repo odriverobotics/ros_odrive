@@ -561,7 +561,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocit
     
 }
 
-void ODriveCanNode::control_pos_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg) {
+void ODriveCanNode::control_pos_gains_callback(const odrive_can::msg::ControlPositionGain::SharedPtr msg) {
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kSetPosGain;
     {
