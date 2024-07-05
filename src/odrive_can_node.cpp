@@ -110,6 +110,10 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS pos_gains_subscriber_qos(rclcpp::KeepLast(10));
     pos_gains_subscriber_ = rclcpp::Node::create_subscription<ControlPositionGain>("control_pos_gains", pos_gains_subscriber_qos, std::bind(&ODriveCanNode::control_pos_gains_callback, this, _1));
 
+    //Creates the subscriber for the RebootMessage messages
+    rclcpp::QoS reboot_message_subscriber_qos(rclcpp::KeepLast(10));
+    reboot_msg_subscriber_ = rclcpp::Node::create_subscription<RebootMessage>("reboot_message", reboot_message_subscriber_qos, std::bind(&ODriveCanNode::reboot_message_callback, this, _1));
+
 
    
     //Creates the service for read and writing to arbitrary values
@@ -565,8 +569,17 @@ void ODriveCanNode::control_pos_gains_callback(const odrive_can::msg::ControlPos
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kSetPosGain;
     {
-        std::lock_guard<std::mutex> guard(pos_gains_msg_mutex_);
         write_le<float>(msg->pos_gain, frame.data);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
+}
+
+void ODriveCanNode::reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg){
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kReboot;
+    {
+        write_le<float>(msg->action, frame.data);
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);

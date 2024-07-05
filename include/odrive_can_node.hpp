@@ -13,6 +13,7 @@
 #include "odrive_can/msg/control_velocity_gains.hpp"
 #include "odrive_can/msg/control_position_gain.hpp"
 #include "odrive_can/srv/value_access.hpp"
+#include "odrive_can/msg/reboot_message.hpp"
 #include <string>
 #include <vector>
 // CUSTOM CODE END
@@ -39,6 +40,8 @@ using ControlVelocityGains = odrive_can::msg::ControlVelocityGains;
 
 using ControlPositionGain = odrive_can::msg::ControlPositionGain;
 
+using RebootMessage = odrive_can::msg::RebootMessage;
+
 using ValueAccess = odrive_can::srv::ValueAccess;
 
 
@@ -60,6 +63,8 @@ private:
     // CUSTOM CODE START
     void control_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
     void control_pos_gains_callback(const odrive_can::msg::ControlPositionGain::SharedPtr msg);
+    void reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg);
+    
     
     void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
 
@@ -94,8 +99,9 @@ private:
     std::mutex gains_msg_mutex_;
     rclcpp::Subscription<ControlVelocityGains>::SharedPtr gains_subscriber_;
 
-    std::mutex pos_gains_msg_mutex_;
     rclcpp::Subscription<ControlPositionGain>::SharedPtr pos_gains_subscriber_;
+
+    rclcpp::Subscription<RebootMessage>::SharedPtr reboot_msg_subscriber_;
 
 
 
