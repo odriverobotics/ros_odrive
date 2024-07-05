@@ -40,23 +40,43 @@ The message consists of all the fields from ODriveStatus followed by all the fie
 
 The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "odrive_status_advanced". E.g. "/pitch/odrv1/odrive_status_advanced".
 
-## Control Gains ##
+## Control Velocity Gains ##
 
-We've added a custom ROS2 message called ControlGains to take care of setting the Velocity and Velocity Integrator gains via messages. 
+We've added a custom ROS2 message called ControlVelocityGains to take care of setting the Velocity and Velocity Integrator gains as well as their limits via messages. 
 
 It's structure is shown below: 
 
 float32 vel_gain  
-float32 vel_integrator_gain  
+float32 vel_integrator_gain
+float32 vel_integrator_limit
+float32 vel_limit
 
 This is a message that will be sent to the Odrive.
 
-Once the message is received by the Odrive's subscriber it will send a CAN message to set the motor's velocity and velocity integrator gains. 
+Once the message is received by the Odrive's subscriber it will send a CAN message to set the motor's velocity and velocity integrator gains and their limits. 
 
 vel_gain - specifies the new velocity gain
 vel_integrator_gain - specifies the new velocity integrator gain.
+vel_integrator_limit - Limits the integrator output. Set to infinity to disable.
+vel_limit - The limit on the velocity. Set to infinity to disable.
 
-The topic of the ControlGains subscriber is set to "control_gains". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_gains". E.g. "/pitch/odrv1/control_gains".
+The topic of the ControlVelocityGains subscriber is set to "control_vel_gains". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_vel_gains". E.g. "/pitch/odrv1/control_vel_gains".
+
+## Control Position Gains ##
+
+We've added a custom ROS2 message called ControlPositionGain to take care of setting the Position gain via messages. 
+
+It's structure is shown below: 
+
+float32 pos_gain
+
+This is a message that will be sent to the Odrive.
+
+Once the message is received by the Odrive's subscriber it will send a CAN message to set the motor's position gain.
+
+pos_gain - specifies the new position gain
+
+The topic of the ControlGains subscriber is set to "control_pos_gain". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_pos_gain". E.g. "/pitch/odrv1/control_pos_gain".
 
 
 ### ValueAccess ###
