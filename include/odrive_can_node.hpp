@@ -61,7 +61,7 @@ private:
     void request_state_callback();
     void ctrl_msg_callback();
     // CUSTOM CODE START
-    void control_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
+    void control_vel_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
     void control_pos_gains_callback(const odrive_can::msg::ControlPositionGain::SharedPtr msg);
     void reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg);
     
@@ -96,8 +96,8 @@ private:
     rclcpp::Service<AxisState>::SharedPtr service_;
 
     //CUSTOM CODE START
-    std::mutex gains_msg_mutex_;
-    rclcpp::Subscription<ControlVelocityGains>::SharedPtr gains_subscriber_;
+    std::mutex vel_gains_msg_mutex_;
+    rclcpp::Subscription<ControlVelocityGains>::SharedPtr vel_gains_subscriber_;
 
     rclcpp::Subscription<ControlPositionGain>::SharedPtr pos_gains_subscriber_;
 

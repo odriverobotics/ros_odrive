@@ -103,12 +103,12 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     
     //Creates the subscriber for the ControlVelocityGains messages
-    rclcpp::QoS gains_subscriber_qos(rclcpp::KeepLast(10));
-    gains_subscriber_ = rclcpp::Node::create_subscription<ControlVelocityGains>("control_vel_gains", gains_subscriber_qos, std::bind(&ODriveCanNode::control_gains_callback, this, _1));
+    rclcpp::QoS vel_gains_subscriber_qos(rclcpp::KeepLast(10));
+    vel_gains_subscriber_ = rclcpp::Node::create_subscription<ControlVelocityGains>("control_vel_gains", vel_gains_subscriber_qos, std::bind(&ODriveCanNode::control_vel_gains_callback, this, _1));
 
     //Creates the subscriber for the ControlVelocityGains messages
     rclcpp::QoS pos_gains_subscriber_qos(rclcpp::KeepLast(10));
-    pos_gains_subscriber_ = rclcpp::Node::create_subscription<ControlPositionGain>("control_pos_gains", pos_gains_subscriber_qos, std::bind(&ODriveCanNode::control_pos_gains_callback, this, _1));
+    pos_gains_subscriber_ = rclcpp::Node::create_subscription<ControlPositionGain>("control_pos_gain", pos_gains_subscriber_qos, std::bind(&ODriveCanNode::control_pos_gains_callback, this, _1));
 
     //Creates the subscriber for the RebootMessage messages
     rclcpp::QoS reboot_message_subscriber_qos(rclcpp::KeepLast(10));
@@ -516,7 +516,7 @@ void ODriveCanNode::ctrl_msg_callback() {
 // Trying to send an advanced control message
 
 
-void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg) {
+void ODriveCanNode::control_vel_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg) {
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "Velocity gains callback called");
     RCLCPP_INFO(rclcpp::Node::get_logger(), "vel gain: %f", msg->vel_gain);
@@ -527,7 +527,7 @@ void ODriveCanNode::control_gains_callback(const odrive_can::msg::ControlVelocit
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kSetVelGains;
     {
-        std::lock_guard<std::mutex> guard(gains_msg_mutex_);
+        std::lock_guard<std::mutex> guard(vel_gains_msg_mutex_);
         write_le<float>(msg->vel_gain, frame.data);
         write_le<float>(msg->vel_integrator_gain,   frame.data + 4);
     }
