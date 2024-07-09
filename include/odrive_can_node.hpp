@@ -67,12 +67,12 @@ private:
     void ctrl_msg_callback();
     // CUSTOM CODE START
     void control_vel_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
-    void control_pos_gains_callback(const odrive_can::msg::ControlTrajAccelLims::SharedPtr msg);
+    void control_pos_gains_callback(const odrive_can::msg::ControlPositionGain::SharedPtr msg);
 
 
 
     void control_traj_vel_lim_callback(const odrive_can::msg::ControlTrajVelLim::SharedPtr msg);
-    void control_traj_accel_lims_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
+    void control_traj_accel_lims_callback(const odrive_can::msg::ControlTrajAccelLims::SharedPtr msg);
 
     void reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg);
     
