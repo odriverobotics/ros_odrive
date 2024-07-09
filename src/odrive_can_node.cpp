@@ -587,7 +587,7 @@ void ODriveCanNode::control_pos_gains_callback(const odrive_can::msg::ControlPos
     can_intf_.send_can_frame(frame);
 }
 
-void ODriveCanNode::control_traj_vel_lim_callback(const odrive_can::msg::ControlTrajVelLim::SharedPtr msg) {
+void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::ControlTrajAccelLims::SharedPtr msg){
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kSetTrajVelLimit;
     {
