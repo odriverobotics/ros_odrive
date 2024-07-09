@@ -1,0 +1,2 @@
+float32 traj_accel_limit
+float32 traj_decel_limit

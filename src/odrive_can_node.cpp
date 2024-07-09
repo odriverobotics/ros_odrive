@@ -37,7 +37,7 @@ enum CmdId : uint32_t {
     kSetLimits = 0x00f,
     kSetTrajVelLimit = 0x011,
     kSetTrajAccelLimit = 0x012,
-    kSetTragInertia = 0x013,
+    kSetTrajInertia = 0x013,
     // CUSTOM CODE END
     kGetIq = 0x014,                // ControllerStatus  - publisher
     kGetTemp = 0x015,                      // SystemStatus      - publisher
@@ -109,6 +109,18 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     //Creates the subscriber for the ControlVelocityGains messages
     rclcpp::QoS pos_gains_subscriber_qos(rclcpp::KeepLast(10));
     pos_gains_subscriber_ = rclcpp::Node::create_subscription<ControlPositionGain>("control_pos_gain", pos_gains_subscriber_qos, std::bind(&ODriveCanNode::control_pos_gains_callback, this, _1));
+
+    //Creates the subscriber for the ControlTrajVelLim messages
+    rclcpp::QoS control_traj_vel_lim_qos(rclcpp::KeepLast(10));
+    control_traj_vel_lim_subscriber_ = rclcpp::Node::create_subscription<ControlTrajVelLim>("control_traj_vel_lim", control_traj_vel_lim_qos, std::bind(&ODriveCanNode::control_traj_vel_lim_callback, this, _1));
+
+
+
+    //Creates the subscriber for the ControlTrajAccelLims messages
+    rclcpp::QoS control_traj_accel_lims_qos(rclcpp::KeepLast(10));
+    control_traj_accel_lims_subscriber_ = rclcpp::Node::create_subscription<ControlTrajAccelLims>("control_traj_accel_lims", control_traj_accel_lims_qos, std::bind(&ODriveCanNode::control_traj_accel_lims_callback, this, _1));
+
+
 
     //Creates the subscriber for the RebootMessage messages
     rclcpp::QoS reboot_message_subscriber_qos(rclcpp::KeepLast(10));
@@ -575,11 +587,35 @@ void ODriveCanNode::control_pos_gains_callback(const odrive_can::msg::ControlPos
     can_intf_.send_can_frame(frame);
 }
 
+void control_traj_vel_lim_callback(const odrive_can::msg::ControlTrajVelLim::SharedPtr msg) {
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kSetTrajVelLimit;
+    {
+        write_le<float>(msg->traj_vel_limit, frame.data);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
+}
+
+
+void control_traj_accel_lims_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg) {
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kSetTrajVelLimit;
+    {
+        write_le<float>(msg->traj_accel_limit, frame.data);
+        write_le<float>(msg->traj_decel_limit, frame.data + 1);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
+}
+
+
 void ODriveCanNode::reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg){
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kReboot;
     {
         write_le<float>(msg->action, frame.data);
+        
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);

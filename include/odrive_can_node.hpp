@@ -13,6 +13,8 @@
 #include "odrive_can/msg/control_velocity_gains.hpp"
 #include "odrive_can/msg/control_position_gain.hpp"
 #include "odrive_can/srv/value_access.hpp"
+#include "odrive_can/msg/control_traj_vel_lim.hpp"
+#include "odrive_can/msg/control_traj_accel_lims.hpp"
 #include "odrive_can/msg/reboot_message.hpp"
 #include <string>
 #include <vector>
@@ -42,6 +44,9 @@ using ControlPositionGain = odrive_can::msg::ControlPositionGain;
 
 using RebootMessage = odrive_can::msg::RebootMessage;
 
+using ControlTrajVelLim = odrive_can::msg::ControlTrajVelLim;
+using ControlTrajAccelLims = odrive_can::msg::ControlTrajAccelLims;
+
 using ValueAccess = odrive_can::srv::ValueAccess;
 
 
@@ -62,7 +67,13 @@ private:
     void ctrl_msg_callback();
     // CUSTOM CODE START
     void control_vel_gains_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
-    void control_pos_gains_callback(const odrive_can::msg::ControlPositionGain::SharedPtr msg);
+    void control_pos_gains_callback(const odrive_can::msg::ControlTrajAccelLims::SharedPtr msg);
+
+
+
+    void control_traj_vel_lim_callback(const odrive_can::msg::ControlTrajVelLim::SharedPtr msg);
+    void control_traj_accel_lims_callback(const odrive_can::msg::ControlVelocityGains::SharedPtr msg);
+
     void reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg);
     
     
@@ -100,6 +111,9 @@ private:
     rclcpp::Subscription<ControlVelocityGains>::SharedPtr vel_gains_subscriber_;
 
     rclcpp::Subscription<ControlPositionGain>::SharedPtr pos_gains_subscriber_;
+
+    rclcpp::Subscription<ControlTrajVelLim>::SharedPtr control_traj_vel_lim_subscriber_;
+    rclcpp::Subscription<ControlTrajAccelLims>::SharedPtr control_traj_accel_lims_subscriber_;
 
     rclcpp::Subscription<RebootMessage>::SharedPtr reboot_msg_subscriber_;
 
