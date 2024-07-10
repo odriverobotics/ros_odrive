@@ -81,7 +81,19 @@ The topic of the ControlGains subscriber is set to "control_pos_gain". Though it
 
 ### Control Traj Vel Limit ###
 
-We've
+We've added a custom ROS2 message called ControlTrajVelLim to take care of setting the Traj_Vel_Limit via messages. 
+
+It's structure is shown below: 
+
+float32 traj_vel_limit
+
+This is a message that will be sent to the Odrive.
+
+Once the message is received by the Odrive's subscriber it will send a CAN message to set the traj_vel_limit property
+
+traj_vel_limit - specifies the new limit for traj velocity
+
+The topic of the ControlTrajVelLim subscriber is set to "control_traj_vel_lim". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_vel_gains". E.g. "/pitch/odrv1/control_traj_vel_lim".
 
 ### Set Traj Accel Limits ###
 
