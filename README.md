@@ -79,6 +79,14 @@ pos_gain - specifies the new position gain
 The topic of the ControlGains subscriber is set to "control_pos_gain". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_pos_gain". E.g. "/pitch/odrv1/control_pos_gain".
 
 
+### Set_Traj_Vel_Limit ###
+
+We've
+
+### Set_Traj_Accel_Limit ###
+
+We've
+
 ### ValueAccess ###
 
 We've added a custom ROS service to access or change arbitrary values on the odrive. 
