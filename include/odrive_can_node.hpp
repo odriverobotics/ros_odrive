@@ -79,7 +79,7 @@ private:
 
     void reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg);
     
-    void estop_service_callback(const std::shared_ptr<Estop::Request> request, std::shared_ptr<Estop::Response> response) 
+    void estop_service_callback(const std::shared_ptr<Estop::Request> request, std::shared_ptr<Estop::Response> response); 
 
     void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
 
