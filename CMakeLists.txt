@@ -21,6 +21,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ControlTrajAccelLims.msg"
   "msg/RebootMessage.msg"
   "srv/AxisState.srv" 
+  "srv/Estop.srv" 
   "srv/ValueAccess.srv"
 
   
