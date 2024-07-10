@@ -8,7 +8,7 @@ We've made some changes to this package to make it more versatile than the base 
 
 ### ODriveStatusAdvanced ###
 
-We've added a custom ROS2 message type (i.e. an interface) called ODriveStatusAdvanced for facilitating sending out information on the Odrive and the Controller wihtout modifying the ControllerStatus or ODriveStatus publishers.
+We've added a custom ROS2 message type (i.e. an interface) that we are publishing called ODriveStatusAdvanced for facilitating sending out information on the Odrive and the Controller wihtout modifying the ControllerStatus or ODriveStatus publishers.
 
 The structure of ODriveStatusAdvanced is shown below:
   
