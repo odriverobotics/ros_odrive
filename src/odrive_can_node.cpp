@@ -652,7 +652,6 @@ void ODriveCanNode::estop_service_callback(const std::shared_ptr<Estop::Request>
 
         Estop::Response current_response = Estop::Response();
     
-    if(call_estop == true){
         // Sending the estop signal via can bus
 
         struct can_frame frame;
@@ -664,19 +663,6 @@ void ODriveCanNode::estop_service_callback(const std::shared_ptr<Estop::Request>
 
         *response = current_response;
 
-        }
-        else{
-            // If the estop service was invoked but call_estop was set to false
-            // THIS SOULD NEVER RUN
-
-            RCLCPP_ERROR(rclcpp::Node::get_logger(), "call_estop was set to false in the service call");
-
-            Estop::Response current_response = Estop::Response();
-            current_response.estopped_system = false;
-
-            *response = current_response;
-
-        }
     }
         
 }
