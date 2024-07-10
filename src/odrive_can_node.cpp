@@ -649,7 +649,7 @@ void ODriveCanNode::estop_service_callback(const std::shared_ptr<Estop::Request>
         std::unique_lock<std::mutex> guard(estop_mutex_);
         bool call_estop = request->call_estop;
 
-    }
+    
 
     Estop::Response current_responponse = Estop::Response();
 
@@ -678,6 +678,7 @@ void ODriveCanNode::estop_service_callback(const std::shared_ptr<Estop::Request>
             *response = current_response;
 
         }
+    }
         
 }
 
