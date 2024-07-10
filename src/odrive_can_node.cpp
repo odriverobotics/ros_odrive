@@ -603,7 +603,7 @@ void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::Cont
     frame.can_id = node_id_ << 5 | kSetTrajAccelLimit;
     {
         write_le<float>(msg->traj_accel_limit, frame.data);
-        write_le<float>(msg->traj_decel_limit, frame.data + 1);
+        write_le<float>(msg->traj_decel_limit, frame.data + 4);
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
