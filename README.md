@@ -36,7 +36,7 @@ This is a message that will be published from the Odrive consistently when data 
 
 The message consists of all the fields from ODriveStatus followed by all the fields from ControllerStatus. When the node receives status data back from the CAN bus it populates the ODriveStatus message, the ControllerStatus message and now it will populate the ODriveStatusAdvanced message using that same information and will publish that message when it has all the necessary data for each message.
 
-[Important] ODriveStatusAdvanced sends out the electrical and mechanical power of the ODrive however, the powers_msg_rate_ms is set to 0 by default. If this is left at 0 the ODrive won't send the powers over can and ODriveStatusAdvanced won't send. 
+[Important] ODriveStatusAdvanced sends out the electrical and mechanical power of the ODrive however, the powers_msg_rate_ms property on the ODrive is set to 0 by default. If this is left at 0 the ODrive won't send the powers over can and ODriveStatusAdvanced won't send. 
 
 The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "odrive_status_advanced". E.g. "/pitch/odrv1/odrive_status_advanced".
 
