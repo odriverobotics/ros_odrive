@@ -12,6 +12,7 @@
 #include "odrive_can/msg/o_drive_status_advanced.hpp"
 #include "odrive_can/msg/control_velocity_gains.hpp"
 #include "odrive_can/msg/control_position_gain.hpp"
+#include "odrive_can/srv/estop.hpp"
 #include "odrive_can/srv/value_access.hpp"
 #include "odrive_can/msg/control_traj_vel_lim.hpp"
 #include "odrive_can/msg/control_traj_accel_lims.hpp"
@@ -47,6 +48,8 @@ using RebootMessage = odrive_can::msg::RebootMessage;
 using ControlTrajVelLim = odrive_can::msg::ControlTrajVelLim;
 using ControlTrajAccelLims = odrive_can::msg::ControlTrajAccelLims;
 
+using Estop = odrive_can::srv::Estop;
+
 using ValueAccess = odrive_can::srv::ValueAccess;
 
 
@@ -76,8 +79,11 @@ private:
 
     void reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg);
     
-    
+    void estop_service_callback(const std::shared_ptr<Estop::Request> request, std::shared_ptr<Estop::Response> response) 
+
     void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
+
+    
 
      
     // CUSTOM CODE END
@@ -118,8 +124,10 @@ private:
     rclcpp::Subscription<RebootMessage>::SharedPtr reboot_msg_subscriber_;
 
 
+    std::mutex estop_mutex_;
+    rclcpp::Service<Estop>::SharedPtr estop_service_;
 
-    EpollEvent value_access_srv_evt_;
+
     uint32_t value_access_datatype_specifier_;
     ValueAccess::Response value_access_reponse_;
     std::condition_variable fresh_TxSdo_;
@@ -130,6 +138,8 @@ private:
 
 
     AxisState::Response value_access_response;
+
+    
 
 
 

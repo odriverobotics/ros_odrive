@@ -127,6 +127,11 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     reboot_msg_subscriber_ = rclcpp::Node::create_subscription<RebootMessage>("reboot_message", reboot_message_subscriber_qos, std::bind(&ODriveCanNode::reboot_message_callback, this, _1));
 
 
+    //Creates the service for read and writing to arbitrary values
+    rclcpp::QoS estop_srv_qos(rclcpp::KeepLast(10));
+    estop_service_ = rclcpp::Node::create_service<Estop>("estop", std::bind(&ODriveCanNode::estop_service_callback, this, _1, _2), estop_srv_qos.get_rmw_qos_profile());
+
+
    
     //Creates the service for read and writing to arbitrary values
     rclcpp::QoS value_access_srv_qos(rclcpp::KeepLast(10));
@@ -636,6 +641,45 @@ void ODriveCanNode::reboot_message_callback(const odrive_can::msg::RebootMessage
 //     RCLCPP_INFO(rclcpp::Node::get_logger(), "Loaded config files");
 // }
 
+
+void ODriveCanNode::estop_service_callback(const std::shared_ptr<Estop::Request> request, std::shared_ptr<Estop::Response> response) {
+    
+    
+    {
+        std::unique_lock<std::mutex> guard(estop_mutex_);
+        bool call_estop = request->call_estop;
+
+    }
+
+    Estop::Response current_responponse = Estop::Response();
+
+    
+    if(call_estop == true){
+        // Sending the estop signal via can bus
+
+        struct can_frame frame;
+        frame.can_id = node_id_ << 5 | kEstop;
+        frame.can_dlc = 8;
+        can_intf_.send_can_frame(frame);
+      
+        current_response.estopped_system = true;
+
+        *response = current_response;
+
+        }
+        else{
+            // If the estop service was invoked but call_estop was set to false
+            // THIS SOULD NEVER RUN
+
+            RCLCPP_ERROR(rclcpp::Node::get_logger(), "call_estop was set to false in the service call");
+
+            current_response.estopped_system = false;
+
+            *response = current_response;
+
+        }
+        
+}
 
 
 
