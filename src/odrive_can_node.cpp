@@ -131,6 +131,11 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::QoS estop_srv_qos(rclcpp::KeepLast(10));
     estop_service_ = rclcpp::Node::create_service<Estop>("estop", std::bind(&ODriveCanNode::estop_service_callback, this, _1, _2), estop_srv_qos.get_rmw_qos_profile());
 
+    
+    //Creates the service for read and writing to arbitrary values
+    rclcpp::QoS clear_errors_srv_qos(rclcpp::KeepLast(10));
+    clear_errors_service_ = rclcpp::Node::create_service<ClearErrors>("clear_errors", std::bind(&ODriveCanNode::clear_errors_service_callback, this, _1, _2), clear_errors_srv_qos.get_rmw_qos_profile());
+
 
    
     //Creates the service for read and writing to arbitrary values
@@ -663,6 +668,28 @@ void ODriveCanNode::estop_service_callback(const std::shared_ptr<Estop::Request>
         *response = current_response;
 
     }
+        
+}
+
+void ODriveCanNode::clear_errors_service_callback(const std::shared_ptr<ClearErrors::Request> request, std::shared_ptr<ClearErrors::Response> response) {
+    
+        ClearErrors::Response current_response = ClearErrors::Response();
+    
+        // Sending the clear errors signal via can bus
+
+        struct can_frame frame;
+        frame.can_id = node_id_ << 5 | kClearErrors;
+
+        {
+            write_le<uint8_t>(1, frame.data);
+        }
+        
+        frame.can_dlc = 8;
+        can_intf_.send_can_frame(frame);
+      
+        current_response.cleared_errors = true;
+
+        *response = current_response;
         
 }
 

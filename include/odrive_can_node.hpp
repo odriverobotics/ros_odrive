@@ -13,6 +13,7 @@
 #include "odrive_can/msg/control_velocity_gains.hpp"
 #include "odrive_can/msg/control_position_gain.hpp"
 #include "odrive_can/srv/estop.hpp"
+#include "odrive_can/srv/clear_errors.hpp"
 #include "odrive_can/srv/value_access.hpp"
 #include "odrive_can/msg/control_traj_vel_lim.hpp"
 #include "odrive_can/msg/control_traj_accel_lims.hpp"
@@ -50,6 +51,8 @@ using ControlTrajAccelLims = odrive_can::msg::ControlTrajAccelLims;
 
 using Estop = odrive_can::srv::Estop;
 
+using ClearErrors = odrive_can::srv::ClearErrors;
+
 using ValueAccess = odrive_can::srv::ValueAccess;
 
 
@@ -79,7 +82,9 @@ private:
 
     void reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg);
     
-    void estop_service_callback(const std::shared_ptr<Estop::Request> request, std::shared_ptr<Estop::Response> response); 
+    void estop_service_callback(const std::shared_ptr<Estop::Request> request, std::shared_ptr<Estop::Response> response);
+
+    void clear_errors_service_callback(const std::shared_ptr<ClearErrors::Request> request, std::shared_ptr<ClearErrors::Response> response);
 
     void value_access_service_callback(const std::shared_ptr<ValueAccess::Request> request, std::shared_ptr<ValueAccess::Response> response);
 
@@ -126,6 +131,8 @@ private:
 
     std::mutex estop_mutex_;
     rclcpp::Service<Estop>::SharedPtr estop_service_;
+
+    rclcpp::Service<ClearErrors>::SharedPtr clear_errors_service_;
 
 
     uint32_t value_access_datatype_specifier_;

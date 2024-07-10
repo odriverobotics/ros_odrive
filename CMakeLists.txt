@@ -22,6 +22,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RebootMessage.msg"
   "srv/AxisState.srv" 
   "srv/Estop.srv" 
+  "srv/ClearErrors.srv" 
   "srv/ValueAccess.srv"
 
   
