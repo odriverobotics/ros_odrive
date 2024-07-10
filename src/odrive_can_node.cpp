@@ -600,7 +600,7 @@ void ODriveCanNode::control_traj_vel_lim_callback(const odrive_can::msg::Control
 
 void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::ControlTrajAccelLims::SharedPtr msg) {
     struct can_frame frame;
-    frame.can_id = node_id_ << 5 | kSetTrajVelLimit;
+    frame.can_id = node_id_ << 5 | kSetTrajAccelLimit;
     {
         write_le<float>(msg->traj_accel_limit, frame.data);
         write_le<float>(msg->traj_decel_limit, frame.data + 1);
