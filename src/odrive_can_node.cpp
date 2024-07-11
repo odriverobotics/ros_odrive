@@ -622,16 +622,16 @@ void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::Cont
 
 
 void ODriveCanNode::reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg){
-    RCLCPP_INFO(rclcpp::Node::get_logger(), "Reboot message callback was initiated");
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "Reboot message callback was initiated %d", msg->action);
 
-    // struct can_frame frame;
-    // frame.can_id = node_id_ << 5 | kReboot;
-    // {
-    //     write_le<uint8_t>(msg->action, frame.data);
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kReboot;
+    {
+        write_le<uint8_t>(msg->action, frame.data);
         
-    // }
-    // frame.can_dlc = 8;
-    // can_intf_.send_can_frame(frame);
+    }
+    frame.can_dlc = 8;
+    can_intf_.send_can_frame(frame);
 
     RCLCPP_INFO(rclcpp::Node::get_logger(), "Reboot message callback was SENT");
 }
