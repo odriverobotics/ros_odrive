@@ -609,7 +609,7 @@ void ODriveCanNode::control_traj_vel_lim_callback(const odrive_can::msg::Control
 
 
 void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::ControlTrajAccelLims::SharedPtr msg) {
-    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "Rcontrol traj accel callback started");
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "control traj accel callback started");
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kSetTrajAccelLimit;
     {
@@ -618,12 +618,11 @@ void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::Cont
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
-    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "Rcontrol traj accel callback ended");
 }
 
 
 void ODriveCanNode::reboot_message_callback(const odrive_can::msg::RebootMessage::SharedPtr msg){
-    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "Reboot message callback was initiated");
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "Reboot message callback was initiated");
 
     // struct can_frame frame;
     // frame.can_id = node_id_ << 5 | kReboot;
@@ -634,7 +633,7 @@ void ODriveCanNode::reboot_message_callback(const odrive_can::msg::RebootMessage
     // frame.can_dlc = 8;
     // can_intf_.send_can_frame(frame);
 
-    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "sent reboot action");
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "Reboot message callback was SENT");
 }
 
 
