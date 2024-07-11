@@ -609,6 +609,7 @@ void ODriveCanNode::control_traj_vel_lim_callback(const odrive_can::msg::Control
 
 
 void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::ControlTrajAccelLims::SharedPtr msg) {
+    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "Rcontrol traj accel callback started");
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | kSetTrajAccelLimit;
     {
@@ -617,6 +618,7 @@ void ODriveCanNode::control_traj_accel_lims_callback(const odrive_can::msg::Cont
     }
     frame.can_dlc = 8;
     can_intf_.send_can_frame(frame);
+    RCLCPP_DEBUG(rclcpp::Node::get_logger(), "Rcontrol traj accel callback ended");
 }
 
 
