@@ -874,6 +874,10 @@ bool ODriveCanNode::settingsFromConfig(){
         
         float_parameter_map["axis0.config.torque_soft_min"] = 267;
         float_parameter_map["axis0.config.torque_soft_max"] = 268;
+
+
+        float_parameter_map["axis0.config.motor.torque_constant"] = 275;
+
         float_parameter_map["axis0.config.motor.current_soft_max"] = 287;
         float_parameter_map["axis0.config.motor.current_hard_max"] = 288;
         float_parameter_map["axis0.controller.config.inertia"] = 416;
