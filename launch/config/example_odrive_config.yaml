@@ -1,0 +1,151 @@
+/**:
+  # To get the correct endoints for the code you need to reference the odrive endpoints documentation for your specific firmware version
+  # The endpoints documentation can be found here: 
+  # https://docs.odriverobotics.com/releases/firmware
+  ros__parameters:
+
+    #config.odrv_fan.enabled
+    # default: true [bool]
+    config.odrv_fan.enabled: true
+
+    #config.odrv_fan.upper
+    # default: 80 [C]
+    config.odrv_fan.upper: 60
+
+    #axis0.controller.config.vel_gain
+    # default: 0.166 [Nm / (rev/s)]
+    axis0.controller.config.vel_gain: 0.166
+
+    #axis0.controller.config.vel_integrator_gain
+    # default: 0.333 [Nm]
+    axis0.controller.config.vel_integrator_gain: 0.333
+
+    #axis0.config.motor.torque_constant 
+    # default = 0.28321918845176697 [Nm / A] 
+    axis0.config.motor.torque_constant: 0.18
+
+    #axis0.config.torque_soft_min
+    #default value = -4.072691917 [Nm]
+    axis0.config.torque_soft_min: -7.0
+
+    #axis0.config.torque_soft_max
+    #default value = 4.072691917 [Nm]
+    axis0.config.torque_soft_max: 7.0
+
+
+    #config.max_regen_current
+    #default value = 6.0 [amp]
+    config.max_regen_current: 6.0
+
+    #config.dc_bus_undervoltage_trip_level
+    #default value = 40.79999924 [V]
+    config.dc_bus_undervoltage_trip_level: 40.79999924
+
+    #config.dc_bus_overvoltage_trip_level
+    #default value = 58.79999924 [V]
+    config.dc_bus_overvoltage_trip_level: 58.79999924
+
+    #config.dc_max_positive_current
+    #default value = 60.0 [amp]
+    config.dc_max_positive_current: 60.0
+
+    #config.dc_max_negative_current
+    #default value = -6.0 [amp]
+    config.dc_max_negative_current: -6.0
+
+
+    #axis0.config.watchdog_timeout
+    #default value = 1.100000024 [sec]
+    axis0.config.watchdog_timeout: 1.100000024
+
+    #axis0.config.enable_watchdog
+    #default value = true [bool]
+    axis0.config.enable_watchdog: true
+
+    #axis0.config.can.heartbeat_msg_rate_ms
+    #default value = 20 [ms]
+    axis0.config.can.heartbeat_msg_rate_ms: 20
+
+    #axis0.config.can.encoder_msg_rate_ms
+    #default value = 20 [ms]
+    axis0.config.can.encoder_msg_rate_ms: 20
+
+    #axis0.config.can.iq_msg_rate_ms
+    #default value = 20 [ms]
+    axis0.config.can.iq_msg_rate_ms: 20
+
+    #axis0.config.can.error_msg_rate_ms
+    #default value = 20 [ms]
+    axis0.config.can.error_msg_rate_ms: 20
+
+    #axis0.config.can.temperature_msg_rate_ms
+    #default value = 20 [ms]
+    axis0.config.can.temperature_msg_rate_ms: 20
+
+    #axis0.config.can.bus_voltage_msg_rate_ms
+    #default value = 20 [ms]
+    axis0.config.can.bus_voltage_msg_rate_ms: 20
+
+    #axis0.config.can.torques_msg_rate_ms
+    #default value = 20 [ms]
+    axis0.config.can.torques_msg_rate_ms: 20
+
+    #axis0.config.can.powers_msg_rate_ms
+    #default value = 0 [ms]
+    axis0.config.can.powers_msg_rate_ms: 20
+
+    #axis0.config.I_bus_hard_min
+    #default value = null [amp]
+    # we can disabling it by setting it to -inf
+    axis0.config.I_bus_hard_min: -100000.0
+
+    # #axis0.config.I_bus_hard_max
+    #default value = null [amp]
+    # we can disabling it by setting it to inf
+    axis0.config.I_bus_hard_max: 100000.0
+
+    # #axis0.config.I_bus_soft_min
+    #default value = null [amp]
+    # we can disabling it by setting it to -inf
+    axis0.config.I_bus_soft_min: -100000.0
+
+    # #axis0.config.I_bus_soft_max
+    #default value = null [amp]
+    # we can disabling it by setting it to inf
+    axis0.config.I_bus_soft_max: 100000.0
+
+    # #axis0.config.P_bus_soft_min
+    #default value = null [W]
+    # we can disabling it by setting it to -inf
+    axis0.config.P_bus_soft_min: -100000.0
+
+    # #axis0.config.P_bus_soft_max
+    #default value = null [W]
+    # we can disabling it by setting it to inf
+    axis0.config.P_bus_soft_max: 100000.0
+
+
+
+    #axis0.config.motor.current_soft_max
+    #default value = 71.90000153 [amp]
+    axis0.config.motor.current_soft_max: 71.90000153
+
+    #axis0.config.motor.current_hard_max
+    #default value = 80.0 [amp]
+    axis0.config.motor.current_hard_max: 80.0
+
+    #axis0.controller.config.enable_torque_mode_vel_limit
+    #default value = true [bool]
+    axis0.controller.config.enable_torque_mode_vel_limit: true
+
+    #axis0.controller.config.inertia
+    #default value = 0.0 [Nm / (rev/s^2)]
+    axis0.controller.config.inertia: 0.0
+
+    #axis0.controller.config.spinout_mechanical_power_threshold
+    #default value = -100.0 [Watt]
+    axis0.controller.config.spinout_mechanical_power_threshold: -100.0
+
+    #axis0.controller.config.spinout_electrical_power_threshold
+    #default value = 100.0 [Watt]
+    axis0.controller.config.spinout_electrical_power_threshold: 100.0
