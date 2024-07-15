@@ -857,6 +857,10 @@ bool ODriveCanNode::settingsFromConfig(){
         RCLCPP_INFO(this->get_logger(), "LOADING odrive config values");
 
         std::map<std::string, int> bool_parameter_map;
+
+        
+        bool_parameter_map["config.odrv_fan.enabled"] = 192;
+
         bool_parameter_map["axis0.config.enable_watchdog"] = 219;
         bool_parameter_map["axis0.controller.config.enable_torque_mode_vel_limit"] = 394;
 
@@ -867,6 +871,10 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["config.dc_bus_overvoltage_trip_level"] = 141;
         float_parameter_map["config.dc_max_positive_current"] = 142;
         float_parameter_map["config.dc_max_negative_current"] = 143;
+        
+        float_parameter_map["config.odrv_fan.upper"] = 190;
+
+
         float_parameter_map["axis0.config.watchdog_timeout"] = 218; 
 
         float_parameter_map["axis0.config.I_bus_hard_min"] = 261;
