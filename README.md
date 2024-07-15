@@ -115,7 +115,22 @@ The topic of the ControlTrajVelLim subscriber is set to "control_traj_accel_lims
 
 ### Estop ###
 
-We've
+We've added a custom ROS service to estop the odrive using CAN bus. 
+
+The structure of the service call is as follows:  
+ 
+\-\-\-  
+bool estopped_system
+
+This is a service that will be sent to the Odrive and the Odrive will send a response back to the client.
+
+The first part of the service message is the structure of the request that we send through to the odrive. The second part of the service message is the structure of the response that we receive. 
+
+In this case the first part is blank because we don't send through any values for the request. 
+
+estopped_system - this is a boolean that returns true if the system is estopped. At the moment there is no way to test that so it always returns True. (Service responses can't be blank so there has to be a value returned.
+
+The service name will be "estop" combined with the odrive's namespace. E.g. "/pitch/odrv1/estop"
 
 ### Reboot ###
 
