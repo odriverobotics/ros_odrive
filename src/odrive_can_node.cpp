@@ -868,7 +868,7 @@ bool ODriveCanNode::settingsFromConfig(){
         float_parameter_map["axis0.config.I_bus_soft_min"] = 263;
         float_parameter_map["axis0.config.I_bus_soft_max"] = 264;
         float_parameter_map["axis0.config.P_bus_soft_min"] = 265;
-        float_parameter_map["axis0.config.P_bus_soft_max"] = 266;
+        float_parameter_map["axis0.config.P_bus_soft_max" ] = 266;
 
 
         
@@ -880,6 +880,12 @@ bool ODriveCanNode::settingsFromConfig(){
 
         float_parameter_map["axis0.config.motor.current_soft_max"] = 287;
         float_parameter_map["axis0.config.motor.current_hard_max"] = 288;
+
+        float_parameter_map["axis0.controller.config.vel_gain"] = 401;
+        float_parameter_map["axis0.controller.config.vel_integrator_gain"] = 402;
+        
+        
+
         float_parameter_map["axis0.controller.config.inertia"] = 416;
         float_parameter_map["axis0.controller.config.spinout_mechanical_power_threshold"] = 420;
         float_parameter_map["axis0.controller.config.spinout_electrical_power_threshold"] = 421;
