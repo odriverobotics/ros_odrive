@@ -158,7 +158,13 @@ The service name will be "clear_errors" combined with the odrive's namespace. E.
 
 ### Config File ###
 
-We've
+We've added the capability of setting arbitrary parameters on the odrive when the code first starts by getting values from a passed in .yaml file. 
+
+This is controlled within the function ODriveCanNode::settingsFromConfig(). It pulls in parameters based on type specific dictionaries that are defined within it. For each data type of parameters that can be accessed (bool, float32, int32, uint64, uint32, uint16, uint8) there is a dictionary that contains key, value paris of parameter names matched with their endpoint ids. The endpoint ids you can find in the odrive documentation. To allow setting a new value from the config file you simply need to add the name of the parameter you are passing in and the endpoint where the parameter is found to the correct dictionary. You will need to update the odrive code itself in order to make this change. 
+E.g. for the parameter config.odrv_fan.enabled which for the firmware version 0.6.9-1 is a boolean found at endpoint 192 you would add this line: 
+bool_parameter_map["config.odrv_fan.enabled"] = 192;   
+
+An example config yaml file is included with the code in the directory 'config'
 
 ### ValueAccess ###
 
