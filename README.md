@@ -134,7 +134,26 @@ The service name will be "estop" combined with the odrive's namespace. E.g. "/pi
 
 ### Reboot ###
 
-We've
+We've added a custom ROS2 message called ControlPositionGain to take care of setting the Position gain via messages. 
+
+It's structure is shown below: 
+
+uint8 action
+
+This is a message that will be sent to the Odrive.
+
+Once the message is received by the Odrive's subscriber it will send a CAN message to reboot the odrive according to the action sent.
+
+action - specifies the action to reboot with. The 2 supported modes are: 
+    0 - reboot and reset setting to default  
+    1 - reboot and save current configuration.   
+  
+[Note] The CAN side allows 4 potential actions which is why we left this as a uint8. The other 2 are: 
+  3 - reboot and erase configuration. We haven't implemented this because this could do a lot of damage if improperly used.  
+  4 - reboot and enter_dfu_mode2(). This puts the odrive into a configuration that allows it to update its firmware over CAN bus. We haven't implemented this because we can update over usb.  
+
+The topic of the ControlGains subscriber is set to "control_pos_gain". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_pos_gain". E.g. "/pitch/odrv1/control_pos_gain".
+
 
 ### Clear Errors ###
 
