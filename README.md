@@ -4,7 +4,7 @@ This repository contains a ROS2 node intended for communication with ODrive moto
 
 ## Changes from the base package ##
 
-We've made some changes to this package to make it more versatile than the base odrive_can package. 
+We've made some changes to this package to make it more versatile than the base odrive_can package. They are defined below before the original Odrive readme.  
 
 ## New Publisher ##
 
