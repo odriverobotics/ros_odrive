@@ -239,6 +239,7 @@ bool_parameter_map["config.odrv_fan.enabled"] = 192;
 
 An example config yaml file is included with the code in the directory 'config'
 
+## Other ##
 
 ### Comments ###
 
