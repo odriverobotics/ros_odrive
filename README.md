@@ -143,6 +143,50 @@ The topic of the ControlTrajVelLim subscriber is set to "control_traj_accel_lims
   
 ## New Services ##
 
+### ValueAccess ###
+
+We've added a custom ROS service to access or change arbitrary values on the odrive. 
+
+The structure of the service call is as follows:  
+
+uint8 opcode   
+uint16 endpoint_id  
+uint32 data_type_specifier  
+bool bool_value  
+float32 float32_value  
+int32 int32_value  
+uint64 uint64_value  
+uint32 uint32_value  
+uint16 uint16_value  
+uint8 uint8_value  
+\-\-\-  
+uint8 opcode  
+uint16 endpoint_id  
+bool bool_value  
+float32 float32_value  
+int32 int32_value  
+uint64 uint64_value  
+uint32 uint32_value  
+uint16 uint16_value  
+uint8 uint8_value  
+
+This is a service that will be sent to the Odrive and the Odrive will send a response back to the client.
+
+The first part of the service message is the structure of the request that we send through to the odrive. The second part of the service message is the structure of the response that we receive. 
+
+The documentation for how to access or change arbirary values for the Odrive via CAN bus is detailed at this [Link](https://docs.odriverobotics.com/v/latest/guides/can-guide.html#can-endpoint-access). This service is a wrapper for the CAN functionality that works as follows:  
+
+opcode - (0 - read, 1 - write) This is functionally a boolean we use to specify whether we want to read a particular value or write to it  
+
+endpoint_id - This is the endpoint of the value as specified for the relevant version of the firmware. (It changes each firmware version so you should check [this list](https://docs.odriverobotics.com/releases/firmware) to find the right endpoint ids for your your version.
+
+data_type_specifier - (0 - bool, 1 - float32, 2 - int32, 3 - uint64, 4 - uint32, 5 - uint16, 6 - uint8) This will specify the type of data that is being passed to the odrive or should be expected to be received. This is necessary otherwise our code won't know how to handle the values. 
+
+The other parameters are just used to send or receive the values themselves. To work with ROS and C++ we had to make them separate parameters but only one should be populated at a time and it should be specified with the data_type_specifier.
+
+The service name will be "access_value" combined with the odrive's namespace. E.g. "/pitch/odrv1/access_value"
+
+
 ### Estop ###
 
 We've added a custom ROS service to estop the odrive using CAN bus. 
@@ -195,48 +239,6 @@ bool_parameter_map["config.odrv_fan.enabled"] = 192;
 
 An example config yaml file is included with the code in the directory 'config'
 
-### ValueAccess ###
-
-We've added a custom ROS service to access or change arbitrary values on the odrive. 
-
-The structure of the service call is as follows:  
-
-uint8 opcode   
-uint16 endpoint_id  
-uint32 data_type_specifier  
-bool bool_value  
-float32 float32_value  
-int32 int32_value  
-uint64 uint64_value  
-uint32 uint32_value  
-uint16 uint16_value  
-uint8 uint8_value  
-\-\-\-  
-uint8 opcode  
-uint16 endpoint_id  
-bool bool_value  
-float32 float32_value  
-int32 int32_value  
-uint64 uint64_value  
-uint32 uint32_value  
-uint16 uint16_value  
-uint8 uint8_value  
-
-This is a service that will be sent to the Odrive and the Odrive will send a response back to the client.
-
-The first part of the service message is the structure of the request that we send through to the odrive. The second part of the service message is the structure of the response that we receive. 
-
-The documentation for how to access or change arbirary values for the Odrive via CAN bus is detailed at this [Link](https://docs.odriverobotics.com/v/latest/guides/can-guide.html#can-endpoint-access). This service is a wrapper for the CAN functionality that works as follows:  
-
-opcode - (0 - read, 1 - write) This is functionally a boolean we use to specify whether we want to read a particular value or write to it  
-
-endpoint_id - This is the endpoint of the value as specified for the relevant version of the firmware. (It changes each firmware version so you should check [this list](https://docs.odriverobotics.com/releases/firmware) to find the right endpoint ids for your your version.
-
-data_type_specifier - (0 - bool, 1 - float32, 2 - int32, 3 - uint64, 4 - uint32, 5 - uint16, 6 - uint8) This will specify the type of data that is being passed to the odrive or should be expected to be received. This is necessary otherwise our code won't know how to handle the values. 
-
-The other parameters are just used to send or receive the values themselves. To work with ROS and C++ we had to make them separate parameters but only one should be populated at a time and it should be specified with the data_type_specifier.
-
-The service name will be "access_value" combined with the odrive's namespace. E.g. "/pitch/odrv1/access_value"
 
 ### Comments ###
 
