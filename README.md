@@ -6,6 +6,8 @@ This repository contains a ROS2 node intended for communication with ODrive moto
 
 We've made some changes to this package to make it more versatile than the base odrive_can package. 
 
+## New Publisher ##
+
 ### ODriveStatusAdvanced ###
 
 We've added a custom ROS2 message type (i.e. an interface) that we are publishing called ODriveStatusAdvanced for facilitating sending out information on the Odrive and the Controller wihtout modifying the ControllerStatus or ODriveStatus publishers.
@@ -39,6 +41,32 @@ The message consists of all the fields from ODriveStatus followed by all the fie
 [Important] ODriveStatusAdvanced sends out the electrical and mechanical power of the ODrive however, the powers_msg_rate_ms property on the ODrive is set to 0 by default. If this is left at 0 the ODrive won't send the powers over can and ODriveStatusAdvanced won't send. 
 
 The topic of the ODriveStatusAdvanced publisher is "odrive_status_advanced". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "odrive_status_advanced". E.g. "/pitch/odrv1/odrive_status_advanced".
+  
+
+## New Subscribers ##
+
+### Reboot ###
+
+We've added a custom ROS2 message called ControlPositionGain to take care of setting the Position gain via messages. 
+
+It's structure is shown below: 
+
+uint8 action
+
+This is a message that will be sent to the Odrive.
+
+Once the message is received by the Odrive's subscriber it will send a CAN message to reboot the odrive according to the action sent.
+
+action - specifies the action to reboot with. The 2 supported modes are: 
+    0 - reboot and reset setting to default  
+    1 - reboot and save current configuration.   
+  
+[Note] The CAN side allows 4 potential actions which is why we left this as a uint8. The other 2 are: 
+  3 - reboot and erase configuration. We haven't implemented this because this could do a lot of damage if improperly used.  
+  4 - reboot and enter_dfu_mode2(). This puts the odrive into a configuration that allows it to update its firmware over CAN bus. We haven't implemented this because we can update over usb.  
+
+The topic of the ControlGains subscriber is set to "control_pos_gain". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_pos_gain". E.g. "/pitch/odrv1/control_pos_gain".
+
 
 ## Control Velocity Gains ##
 
@@ -112,6 +140,8 @@ traj_accel_limit - specifies the new limit for traj acceleration
 traj_decel_limit - specifies the new limit for traj deceleration
 
 The topic of the ControlTrajVelLim subscriber is set to "control_traj_accel_lims". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_traj_accel_lims". E.g. "/pitch/odrv1/control_traj_accel_lims".
+  
+## New Services ##
 
 ### Estop ###
 
@@ -132,29 +162,7 @@ estopped_system - this is a boolean that returns true if the system is estopped.
 
 The service name will be "estop" combined with the odrive's namespace. E.g. "/pitch/odrv1/estop"
 
-### Reboot ###
-
-We've added a custom ROS2 message called ControlPositionGain to take care of setting the Position gain via messages. 
-
-It's structure is shown below: 
-
-uint8 action
-
-This is a message that will be sent to the Odrive.
-
-Once the message is received by the Odrive's subscriber it will send a CAN message to reboot the odrive according to the action sent.
-
-action - specifies the action to reboot with. The 2 supported modes are: 
-    0 - reboot and reset setting to default  
-    1 - reboot and save current configuration.   
   
-[Note] The CAN side allows 4 potential actions which is why we left this as a uint8. The other 2 are: 
-  3 - reboot and erase configuration. We haven't implemented this because this could do a lot of damage if improperly used.  
-  4 - reboot and enter_dfu_mode2(). This puts the odrive into a configuration that allows it to update its firmware over CAN bus. We haven't implemented this because we can update over usb.  
-
-The topic of the ControlGains subscriber is set to "control_pos_gain". Though it should be noted that because of how the odrive_node works that in practice the topic will be the odrive's namespace followed by "control_pos_gain". E.g. "/pitch/odrv1/control_pos_gain".
-
-
 ### Clear Errors ###
 
 
@@ -174,6 +182,8 @@ In this case the first part is blank because we don't send through any values fo
 cleared_errors - this is a boolean that returns true if the odrive has cleared errors. At the moment there is no way to test that so it always returns True. (Service responses can't be blank so there has to be a value returned.
 
 The service name will be "clear_errors" combined with the odrive's namespace. E.g. "/pitch/odrv1/clear_errors"
+
+## New Parameters ##
 
 ### Config File ###
 
