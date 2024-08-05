@@ -5,7 +5,7 @@
 
 This package contains:
 
-- Hardware descriptor (URDF) files for the [BotWheel Explorer](https://odriverobotics.com/shop/botwheel-explorer).
+- Hardware descriptor (URDF) files for the [BotWheel Explorer](https://shop.odriverobotics.com/products/botwheel-explorer).
 - A launch file that allows to drive the robot around by sending `geometry_msgs/msg/TwistStamped` messages.
 
 See also: [odrive_ros2_control](../odrive_ros2_control/README.md)
