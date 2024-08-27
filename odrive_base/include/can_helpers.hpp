@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 
 template <typename T>
 T can_get_signal_raw(const uint8_t* buf, const size_t startBit, const size_t length, const bool isIntel) {
