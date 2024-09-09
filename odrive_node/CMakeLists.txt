@@ -21,7 +21,7 @@ ament_export_dependencies(rosidl_default_runtime)
 include_directories(include)
 include_directories(../odrive_base/include)
 
-add_executable(odrive_can_node 
+add_executable(odrive_can_node
   ../odrive_base/src/epoll_event_loop.cpp
   ../odrive_base/src/socket_can.cpp
   src/odrive_can_node.cpp

@@ -8,7 +8,7 @@ namespace std {
 // This will be added in C++23 but we backport it here
 template<typename T>
 constexpr T byteswap(T n) noexcept {
-    static_assert(std::has_unique_object_representations_v<T>, 
+    static_assert(std::has_unique_object_representations_v<T>,
         "T may not have padding bits");
     std::array<std::byte, sizeof(T)>& as_arr =
         reinterpret_cast<std::array<std::byte, sizeof(T)>&>(n);

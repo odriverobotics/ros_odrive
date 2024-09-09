@@ -109,7 +109,7 @@ bool SocketCanIntf::read_nonblocking() {
     struct msghdr message = {
         .msg_name = nullptr,
         .msg_namelen = 0,
-        .msg_iov = &vec, 
+        .msg_iov = &vec,
         .msg_iovlen = 1,
         .msg_control = &ctrlmsg,
         .msg_controllen = sizeof(ctrlmsg),

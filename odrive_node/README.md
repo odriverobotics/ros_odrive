@@ -15,7 +15,7 @@ For information about installation, prerequisites and getting started, check out
 
 * `/control_message`: Input setpoints for the ODrive.
 
-  The ODrive will interpret the values of input_pos, input_vel and input_torque depending on the control mode. 
+  The ODrive will interpret the values of input_pos, input_vel and input_torque depending on the control mode.
 
   For example: In velocity control mode (2) input_pos is ignored, and input_torque is used as a feedforward term.
 
@@ -33,7 +33,7 @@ For information about installation, prerequisites and getting started, check out
 
   The ROS node will wait until one of each of these CAN messages has arrived before it emits a message on the `odrive_status` topic. Therefore, the largest period set here will dictate the period of the ROS2 message as well.
 
-* `/controller_status`: Provides Controller level status updates. 
+* `/controller_status`: Provides Controller level status updates.
 
   For this topic to work, the ODrive must be configured with the following [cyclic messages](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#cyclic-messages) enabled:
 

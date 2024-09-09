@@ -27,7 +27,7 @@ using AxisState = odrive_can::srv::AxisState;
 class ODriveCanNode : public rclcpp::Node {
 public:
     ODriveCanNode(const std::string& node_name);
-    bool init(EpollEventLoop* event_loop); 
+    bool init(EpollEventLoop* event_loop);
     void deinit();
 private:
     void recv_callback(const can_frame& frame);
@@ -36,15 +36,15 @@ private:
     void request_state_callback();
     void ctrl_msg_callback();
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
-    
+
     uint16_t node_id_;
     SocketCanIntf can_intf_ = SocketCanIntf();
-    
+
     short int ctrl_pub_flag_ = 0;
     std::mutex ctrl_stat_mutex_;
     ControllerStatus ctrl_stat_ = ControllerStatus();
     rclcpp::Publisher<ControllerStatus>::SharedPtr ctrl_publisher_;
-    
+
     short int odrv_pub_flag_ = 0;
     std::mutex odrv_stat_mutex_;
     ODriveStatus odrv_stat_ = ODriveStatus();
