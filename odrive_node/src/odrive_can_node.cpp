@@ -16,6 +16,7 @@ enum CmdId : uint32_t {
     kGetIq = 0x014,                // ControllerStatus  - publisher
     kGetTemp,                      // SystemStatus      - publisher
     kGetBusVoltageCurrent = 0x017, // SystemStatus      - publisher
+    kClearErrors,                  // SetClearErrors    - service
     kGetTorques = 0x01c,           // ControllerStatus  - publisher
 };
 
@@ -42,6 +43,9 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
+
+    rclcpp::QoS srv_clear_errors_qos(rclcpp::KeepAll{});
+    service_clear_errors_ = rclcpp::Node::create_service<Empty>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos.get_rmw_qos_profile());
 }
 
 void ODriveCanNode::deinit() {
@@ -65,6 +69,10 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     }
     if (!srv_evt_.init(event_loop, std::bind(&ODriveCanNode::request_state_callback, this))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize service event");
+        return false;
+    }
+    if (!srv_clear_errors_evt_.init(event_loop, std::bind(&ODriveCanNode::request_clear_errors_callback, this))) {
+        RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize clear errors service event");
         return false;
     }
     RCLCPP_INFO(rclcpp::Node::get_logger(), "node_id: %d", node_id_);
@@ -180,6 +188,11 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
     response->procedure_result = ctrl_stat_.procedure_result;
 }
 
+void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response) {
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "clearing errors");
+    srv_clear_errors_evt_.set();
+}
+
 void ODriveCanNode::request_state_callback() {
     struct can_frame frame;
     frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
@@ -188,6 +201,15 @@ void ODriveCanNode::request_state_callback() {
         write_le<uint32_t>(axis_state_, frame.data);
     }
     frame.can_dlc = 4;
+    can_intf_.send_can_frame(frame);
+}
+
+void ODriveCanNode::request_clear_errors_callback() {
+    struct can_frame frame;
+    for(int i=0; i<CAN_MAX_DLEN; i++) frame.data[i] = 0;
+    frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
+    write_le<uint8_t>(0, frame.data);
+    frame.can_dlc = 1;
     can_intf_.send_can_frame(frame);
 }
 
