@@ -8,6 +8,7 @@
         <hardware>
           <plugin>odrive_ros2_control_plugin/ODriveHardwareInterface</plugin>
           <param name="can">can0</param>
+          <param name="can_reconnect">false</param>
         </hardware>
       </xacro:unless>
       <xacro:if value="${use_mock_hardware}">
