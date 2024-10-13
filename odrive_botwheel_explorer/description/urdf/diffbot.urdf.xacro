@@ -4,6 +4,8 @@
   <xacro:arg name="prefix" default="" />
   <xacro:arg name="use_mock_hardware" default="false" />
 
+  <xacro:include filename="$(find odrive_botwheel_explorer)/urdf/diffbot_materials.urdf.xacro" />
+
   <xacro:include filename="$(find odrive_botwheel_explorer)/urdf/diffbot_description.urdf.xacro" />
 
   <!-- Import Rviz colors -->
