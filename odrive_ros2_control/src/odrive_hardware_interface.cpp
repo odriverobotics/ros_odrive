@@ -45,7 +45,7 @@ private:
 };
 
 struct Axis {
-    Axis(SocketCanIntf* can_intf, uint32_t node_id, double transmission_ratio) : can_intf_(can_intf), node_id_(node_id), transmission_ratio_(transmission_ratio) {}
+    Axis(SocketCanIntf* can_intf, uint32_t node_id, double transmission_ratio = 1.0) : can_intf_(can_intf), node_id_(node_id), transmission_ratio_(transmission_ratio) {}
 
     void on_can_msg(const rclcpp::Time& timestamp, const can_frame& frame);
 
@@ -114,10 +114,11 @@ CallbackReturn ODriveHardwareInterface::on_init(const hardware_interface::Hardwa
     can_intf_name_ = info_.hardware_parameters["can"];
 
     for (auto& joint : info_.joints) {
-        double transmission_ratio = std::stod(joint.parameters.at("transmission_ratio"));  // Read transmission ratio from URDF
+        double transmission_ratio = 1.0;
+        if (joint.parameters.find("transmission_ratio") != joint.parameters.end()) {
+            double transmission_ratio = std::stod(joint.parameters.at("transmission_ratio"));  // Read transmission ratio from URDF
+        }
         axes_.emplace_back(&can_intf_, std::stoi(joint.parameters.at("node_id")), transmission_ratio);
-    }
-
     return CallbackReturn::SUCCESS;
 }
 
