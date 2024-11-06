@@ -32,20 +32,15 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::Node::declare_parameter<std::string>("interface", "can0");
     rclcpp::Node::declare_parameter<uint16_t>("node_id", 0);
 
-    rclcpp::QoS ctrl_stat_qos(rclcpp::KeepAll{});
-    ctrl_publisher_ = rclcpp::Node::create_publisher<ControllerStatus>("controller_status", ctrl_stat_qos);
-    
-    rclcpp::QoS odrv_stat_qos(rclcpp::KeepAll{});
-    odrv_publisher_ = rclcpp::Node::create_publisher<ODriveStatus>("odrive_status", odrv_stat_qos);
+    rclcpp::QoS pd_qos(rclcpp::KeepLast(1)); // process data QoS settings
+    rclcpp::QoS sd_qos(rclcpp::KeepAll{}); // service data QoS settings
 
-    rclcpp::QoS ctrl_msg_qos(rclcpp::KeepAll{});
-    subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_message", ctrl_msg_qos, std::bind(&ODriveCanNode::subscriber_callback, this, _1));
+    ctrl_publisher_ = rclcpp::Node::create_publisher<ControllerStatus>("controller_status", pd_qos);
+    odrv_publisher_ = rclcpp::Node::create_publisher<ODriveStatus>("odrive_status", pd_qos);
+    subscriber_ = rclcpp::Node::create_subscription<ControlMessage>("control_message", pd_qos, std::bind(&ODriveCanNode::subscriber_callback, this, _1));
 
-    rclcpp::QoS srv_qos(rclcpp::KeepAll{});
-    service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos.get_rmw_qos_profile());
-
-    rclcpp::QoS srv_clear_errors_qos(rclcpp::KeepAll{});
-    service_clear_errors_ = rclcpp::Node::create_service<Empty>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos.get_rmw_qos_profile());
+    service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), sd_qos.get_rmw_qos_profile());
+    service_clear_errors_ = rclcpp::Node::create_service<Empty>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), sd_qos.get_rmw_qos_profile());
 }
 
 void ODriveCanNode::deinit() {
