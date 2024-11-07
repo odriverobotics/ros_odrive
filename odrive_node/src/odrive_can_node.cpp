@@ -54,10 +54,7 @@ void ODriveCanNode::deinit() {
     if (axis_idle_on_shutdown_) {
         struct can_frame frame;
         frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
-        {
-            std::unique_lock<std::mutex> guard(axis_state_mutex_);
-            write_le<uint32_t>(ODriveAxisState::AXIS_STATE_IDLE, frame.data);
-        }
+        write_le<uint32_t>(ODriveAxisState::AXIS_STATE_IDLE, frame.data);
         frame.can_dlc = 4;
         can_intf_.send_can_frame(frame);
     }
