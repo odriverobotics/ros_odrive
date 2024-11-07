@@ -1,6 +1,7 @@
 
 #include "can_helpers.hpp"
 #include "can_simple_messages.hpp"
+#include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "odrive_enums.h"
@@ -37,6 +38,8 @@ public:
 private:
     void on_can_msg(const can_frame& frame);
 
+    void on_can_reconnect();
+
     EpollEventLoop event_loop_;
     std::vector<Axis> axes_;
     std::string can_intf_name_;
@@ -61,10 +64,10 @@ struct Axis {
 
     // State (ODrives => ros2_control)
     // rclcpp::Time encoder_estimates_timestamp_;
-    // uint32_t axis_error_ = 0;
-    // uint8_t axis_state_ = 0;
-    // uint8_t procedure_result_ = 0;
-    // uint8_t trajectory_done_flag_ = 0;
+    uint32_t axis_error_ = 0;
+    uint8_t axis_state_ = 0;
+    uint8_t procedure_result_ = 0;
+    uint8_t trajectory_done_flag_ = 0;
     double pos_estimate_ = NAN; // [rad]
     double vel_estimate_ = NAN; // [rad/s]
     // double iq_setpoint_ = NAN;
@@ -281,6 +284,10 @@ return_type ODriveHardwareInterface::read(const rclcpp::Time& timestamp, const r
 }
 
 return_type ODriveHardwareInterface::write(const rclcpp::Time&, const rclcpp::Duration&) {
+    if (hardware_interface::parse_bool(info_.hardware_parameters["can_reconnect"]) && can_intf_.has_can_reconnected()) {
+      on_can_reconnect();
+    }
+
     for (auto& axis : axes_) {
         // Send the CAN message that fits the set of enabled setpoints
         if (axis.pos_input_enabled_) {
@@ -339,7 +346,55 @@ void Axis::on_can_msg(const rclcpp::Time&, const can_frame& frame) {
                 torque_estimate_ = msg.Torque_Estimate;
             }
         } break;
-            // silently ignore unimplemented command IDs
+        case Heartbeat_msg_t::cmd_id: {
+            if (Heartbeat_msg_t msg; try_decode(msg)) {
+                axis_error_ = msg.Axis_Error; 
+                axis_state_ = msg.Axis_State;
+                procedure_result_ = msg.Procedure_Result;
+                trajectory_done_flag_ = msg.Trajectory_Done_Flag;
+            }
+        } break;
+        // silently ignore unimplemented command IDs
+    }
+}
+
+void ODriveHardwareInterface::on_can_reconnect() {
+    for (size_t i = 0; i < axes_.size(); ++i) {
+        Axis& axis = axes_[i];
+        if (!(axis.axis_error_ == 0 && axis.axis_state_ == 8 && axis.procedure_result_ == 0 && axis.trajectory_done_flag_ == 1)) {
+            Set_Controller_Mode_msg_t msg;
+            if (axis.pos_input_enabled_) {
+                RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to position control", info_.joints[i].name.c_str());
+                msg.Control_Mode = CONTROL_MODE_POSITION_CONTROL;
+                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
+            } else if (axis.vel_input_enabled_) {
+                RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to velocity control", info_.joints[i].name.c_str());
+                msg.Control_Mode = CONTROL_MODE_VELOCITY_CONTROL;
+                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
+            } else {
+                RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to torque control", info_.joints[i].name.c_str());
+                msg.Control_Mode = CONTROL_MODE_TORQUE_CONTROL;
+                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
+            }
+
+            bool any_enabled = axis.pos_input_enabled_ || axis.vel_input_enabled_ || axis.torque_input_enabled_;
+
+            if (any_enabled) {
+                axis.send(msg); // Set control mode
+            }
+
+            // Set axis state
+            Clear_Errors_msg_t msg1;
+            msg1.Identify = 0;
+            axis.send(msg1);
+
+            // Set axis state
+            Set_Axis_State_msg_t msg2;
+            msg2.Axis_Requested_State = any_enabled ? AXIS_STATE_CLOSED_LOOP_CONTROL : AXIS_STATE_IDLE;
+            axis.send(msg2);
+        } else {
+          can_intf_.reset_can_connection_check();
+        }
     }
 }
 

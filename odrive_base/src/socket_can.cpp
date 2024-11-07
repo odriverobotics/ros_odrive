@@ -78,8 +78,11 @@ bool SocketCanIntf::send_can_frame(const can_frame& frame) {
     ssize_t nbytes = write(socket_id_, &frame, sizeof(frame));
     if (nbytes == -1) {
         std::cerr << "Failed to send CAN frame" << std::endl;
+        can_send_failed_ = true;
+        has_been_can_send_failed_ = true;
         return false;
     }
+    can_send_failed_ = false;
 
     return true;
 }
@@ -134,4 +137,12 @@ bool SocketCanIntf::read_nonblocking() {
 
     process_can_frame(frame);
     return true;
+}
+
+void SocketCanIntf::reset_can_connection_check() {
+    has_been_can_send_failed_ = false;
+}
+
+bool SocketCanIntf::has_can_reconnected() {
+    return can_send_failed_ == false && has_been_can_send_failed_ == true;
 }
