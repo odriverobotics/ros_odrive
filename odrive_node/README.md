@@ -10,6 +10,7 @@ For information about installation, prerequisites and getting started, check out
 
 * `node_id`: The node_id of the device this node will attach to
 * `interface`: the network interface name for the can bus
+* `axis_idle_on_shutdown`: Whether to set ODrive to IDLE state when the node is terminated
 
 ### Subscribes to
 
