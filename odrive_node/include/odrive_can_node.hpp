@@ -34,7 +34,7 @@ public:
 private:
     void recv_callback(const can_frame& frame);
     void subscriber_callback(const ControlMessage::SharedPtr msg);
-    void service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response);
+    void service_callback(std::shared_ptr<rmw_request_id_t> request_id, const std::shared_ptr<AxisState::Request> request);
     void service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response);
     void request_state_callback();
     void request_clear_errors_callback();

@@ -167,7 +167,7 @@ void ODriveCanNode::subscriber_callback(const ControlMessage::SharedPtr msg) {
     sub_evt_.set();
 }
 
-void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response) {
+void ODriveCanNode::service_callback(std::shared_ptr<rmw_request_id_t> request_id, const std::shared_ptr<AxisState::Request> request) {
     {
         std::unique_lock<std::mutex> guard(axis_state_mutex_);
         axis_state_ = request->axis_requested_state;
@@ -175,17 +175,17 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
     }
     srv_evt_.set();
 
-    std::unique_lock<std::mutex> guard(ctrl_stat_mutex_); // define lock for controller status
-    auto call_time = std::chrono::steady_clock::now();
-    fresh_heartbeat_.wait(guard, [this, &call_time]() {
-        bool complete = (this->ctrl_stat_.procedure_result != 1) && // make sure procedure_result is not busy
-            (std::chrono::steady_clock::now() - call_time >= std::chrono::seconds(1)); // wait for minimum one second 
-        return complete; 
-        }); // wait for procedure_result
-    
-    response->axis_state = ctrl_stat_.axis_state;
-    response->active_errors = ctrl_stat_.active_errors;
-    response->procedure_result = ctrl_stat_.procedure_result;
+    // TODO: The response below needs to be moved to a different function so that
+    // this function returns immediately.
+    // Need to wait for a minimum amount of 100ms or so, then on next heartbeart
+    // or on timeout send response.
+    // request_id needs to be stored somewhere (e.g. class member) until the
+    // call completes.
+    AxisState::Response response;
+    response.axis_state = ctrl_stat_.axis_state;
+    response.active_errors = ctrl_stat_.active_errors;
+    response.procedure_result = ctrl_stat_.procedure_result;
+    service_->send_response(*request_id, response);
 }
 
 void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response) {
