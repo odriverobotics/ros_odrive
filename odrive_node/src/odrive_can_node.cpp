@@ -51,7 +51,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 }
 
 void ODriveCanNode::deinit() {
-    if(axis_idle_on_shutdown_) {
+    if (axis_idle_on_shutdown_) {
         struct can_frame frame;
         frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
         {
