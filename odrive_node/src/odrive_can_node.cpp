@@ -205,12 +205,25 @@ void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::R
 }
 
 void ODriveCanNode::request_state_callback() {
-    struct can_frame frame;
-    frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
+    uint32_t axis_state;
     {
         std::unique_lock<std::mutex> guard(axis_state_mutex_);
-        write_le<uint32_t>(axis_state_, frame.data);
+        axis_state = axis_state_;
     }
+
+    struct can_frame frame;
+
+    if (axis_state != 0) {
+        // Clear errors if requested state is not IDLE
+        frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
+        write_le<uint8_t>(0, frame.data);
+        frame.can_dlc = 1;
+        can_intf_.send_can_frame(frame);
+    }
+
+    // Set state
+    frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
+    write_le<uint32_t>(axis_state, frame.data);
     frame.can_dlc = 4;
     can_intf_.send_can_frame(frame);
 }
