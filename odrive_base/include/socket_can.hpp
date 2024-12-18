@@ -16,6 +16,9 @@ public:
     bool send_can_frame(const can_frame& frame);
 
     bool read_nonblocking();
+
+    void reset_can_connection_check();
+    bool has_can_reconnected();
 private:
     std::string interface_;
     int socket_id_ = -1;
@@ -23,6 +26,8 @@ private:
     EpollEventLoop::EvtId socket_evt_id_;
     FrameProcessor frame_processor_;
     bool broken_ = false;
+    bool can_send_failed_ = false;
+    bool has_been_can_send_failed_ = false;
 
     void on_socket_event(uint32_t mask);
     void process_can_frame(const can_frame& frame) {
