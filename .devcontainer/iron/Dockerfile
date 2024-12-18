@@ -24,7 +24,7 @@ RUN sudo apt update && sudo apt upgrade -y
 RUN sudo apt install -y git
 
 # Rosdep update
-RUN rosdep update
+RUN rosdep update --include-eol-distros
 
 # Source the ROS setup file
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
