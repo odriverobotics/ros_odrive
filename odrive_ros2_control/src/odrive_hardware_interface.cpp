@@ -45,7 +45,7 @@ private:
 };
 
 struct Axis {
-    Axis(SocketCanIntf* can_intf, uint32_t node_id) : can_intf_(can_intf), node_id_(node_id) {}
+    Axis(SocketCanIntf* can_intf, uint32_t node_id, double transmission_ratio = 1.0) : can_intf_(can_intf), node_id_(node_id), transmission_ratio_(transmission_ratio) {}
 
     void on_can_msg(const rclcpp::Time& timestamp, const can_frame& frame);
 
@@ -53,6 +53,7 @@ struct Axis {
 
     SocketCanIntf* can_intf_;
     uint32_t node_id_;
+    double transmission_ratio_;
 
     // Commands (ros2_control => ODrives)
     double pos_setpoint_ = 0.0f; // [rad]
@@ -113,9 +114,11 @@ CallbackReturn ODriveHardwareInterface::on_init(const hardware_interface::Hardwa
     can_intf_name_ = info_.hardware_parameters["can"];
 
     for (auto& joint : info_.joints) {
-        axes_.emplace_back(&can_intf_, std::stoi(joint.parameters.at("node_id")));
-    }
-
+        double transmission_ratio = 1.0;
+        if (joint.parameters.find("transmission_ratio") != joint.parameters.end()) {
+            double transmission_ratio = std::stod(joint.parameters.at("transmission_ratio"));  // Read transmission ratio from URDF
+        }
+        axes_.emplace_back(&can_intf_, std::stoi(joint.parameters.at("node_id")), transmission_ratio);
     return CallbackReturn::SUCCESS;
 }
 
@@ -277,6 +280,13 @@ return_type ODriveHardwareInterface::read(const rclcpp::Time& timestamp, const r
         // repeat until CAN interface has no more messages
     }
 
+       // Convert motor state to joint state using transmission_ratio
+    for (auto& axis : axes_) {
+        axis.pos_estimate_ *= axis.transmission_ratio_;  // Apply transmission ratio to position estimate
+        axis.vel_estimate_ *= axis.transmission_ratio_;  // Apply transmission ratio to velocity estimate
+        axis.torque_estimate_ *= axis.transmission_ratio_;  // Apply transmission ratio to torque estimate if needed
+    }
+
     return return_type::OK;
 }
 
@@ -285,19 +295,18 @@ return_type ODriveHardwareInterface::write(const rclcpp::Time&, const rclcpp::Du
         // Send the CAN message that fits the set of enabled setpoints
         if (axis.pos_input_enabled_) {
             Set_Input_Pos_msg_t msg;
-            msg.Input_Pos = axis.pos_setpoint_ / (2 * M_PI);
-            msg.Vel_FF = axis.vel_input_enabled_ ? (axis.vel_setpoint_  / (2 * M_PI)) : 0.0f;
-            msg.Torque_FF = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0f;
+            msg.Input_Pos = axis.pos_setpoint_ / (2 * M_PI * axis.transmission_ratio_);  // Apply inverse transmission ratio
+            msg.Vel_FF = axis.vel_input_enabled_ ? (axis.vel_setpoint_ / (2 * M_PI * axis.transmission_ratio_)) : 0.0f; // Apply inverse transmission ratio to feed-forward term
+            msg.Torque_FF = axis.torque_input_enabled_ ? (axis.torque_setpoint_ / axis.transmission_ratio_) : 0.0f; // Apply inverse transmission ratio to feed-forward term
             axis.send(msg);
         } else if (axis.vel_input_enabled_) {
             Set_Input_Vel_msg_t msg;
-            msg.Input_Vel = axis.vel_setpoint_ / (2 * M_PI);
-            msg.Input_Torque_FF = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0f;
+            msg.Input_Vel = axis.vel_setpoint_ / (2 * M_PI * axis.transmission_ratio_);  // Apply inverse transmission ratio
+            msg.Input_Torque_FF = axis.torque_input_enabled_ ? (axis.torque_setpoint_ / axis.transmission_ratio_) : 0.0f; // Apply inverse transmission ratio to feed-forward term
             axis.send(msg);
         } else if (axis.torque_input_enabled_) {
             Set_Input_Torque_msg_t msg;
-            msg.Input_Torque = axis.torque_setpoint_;
-            axis.send(msg);
+            msg.Input_Torque = axis.torque_setpoint_ / axis.transmission_ratio_;  // Apply inverse transmission ratio            axis.send(msg);
         } else {
             // no control enabled - don't send any setpoint
         }
