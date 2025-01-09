@@ -116,11 +116,13 @@ CallbackReturn ODriveHardwareInterface::on_init(const hardware_interface::Hardwa
     for (auto& joint : info_.joints) {
         double transmission_ratio = 1.0;
         if (joint.parameters.find("transmission_ratio") != joint.parameters.end()) {
-            double transmission_ratio = std::stod(joint.parameters.at("transmission_ratio"));  // Read transmission ratio from URDF
+            transmission_ratio = std::stod(joint.parameters.at("transmission_ratio"));  // Read transmission ratio from URDF
         }
         axes_.emplace_back(&can_intf_, std::stoi(joint.parameters.at("node_id")), transmission_ratio);
+    }
     return CallbackReturn::SUCCESS;
 }
+
 
 CallbackReturn ODriveHardwareInterface::on_configure(const State&) {
     if (!can_intf_.init(can_intf_name_, &event_loop_, std::bind(&ODriveHardwareInterface::on_can_msg, this, _1))) {
