@@ -191,6 +191,8 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
 void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response) {
     RCLCPP_INFO(rclcpp::Node::get_logger(), "clearing errors");
     srv_clear_errors_evt_.set();
+    (void)request;  // Suppress unused parameter warning
+    (void)response;
 }
 
 void ODriveCanNode::request_state_callback() {
@@ -205,7 +207,7 @@ void ODriveCanNode::request_state_callback() {
 }
 
 void ODriveCanNode::request_clear_errors_callback() {
-    struct can_frame frame;
+    struct can_frame frame = {};
     frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
     write_le<uint8_t>(0, frame.data);
     frame.can_dlc = 1;
