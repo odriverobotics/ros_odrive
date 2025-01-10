@@ -16,7 +16,16 @@
             },
             "problemMatcher": [
                 "$gcc"
-            ],
+            ]
         },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "rm -rd build install log",
+            "presentation": {
+                "clear": true
+            },
+            "problemMatcher": []
+        }
     ]
 }

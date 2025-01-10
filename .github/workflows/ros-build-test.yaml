@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ros-version: [humble, iron]
+        ros-version: [humble, iron, jazzy]
     
     steps:
       - name: Check out code
@@ -40,7 +40,8 @@ jobs:
 
       - name: Adjust permissions
         run: |
-          docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} sudo chown -R vscode:vscode /workspace
+          docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} \
+          sh -c 'username=$(id -un) && sudo chown -R "$username":"$username" /workspace'
 
       - name: Run colcon build
         run: |

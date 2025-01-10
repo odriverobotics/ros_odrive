@@ -10,6 +10,7 @@ For information about installation, prerequisites and getting started, check out
 
 * `node_id`: The node_id of the device this node will attach to
 * `interface`: the network interface name for the can bus
+* `axis_idle_on_shutdown`: Whether to set ODrive to IDLE state when the node is terminated
 
 ### Subscribes to
 
@@ -50,9 +51,14 @@ For information about installation, prerequisites and getting started, check out
 
   This service requires regular heartbeat messages from the ODrive to determine the procedure result and will block until the procedure completes, with a minimum call time of 1 second.
 
-* `/clear_errors`: Clears disarm_reason and procedure_result and re-arms the brake resistor if applicable
+  If the requested state is anything other than IDLE, this sends a `clear_errors` request to the ODrive (see below) before sending the state request.
 
-  If the axis dropped into IDLE because of an error, clearing the errors does not put the axis back into CLOSED_LOOP_CONTROL. To do so, you must request CLOSED_LOOP_CONTROL again explicitly.
+* `/clear_errors`: Manual service call to clear disarm_reason and procedure_result, reset the LED color and re-arm the brake resistor if applicable. See also [`clear_errors()`](https://docs.odriverobotics.com/v/latest/fibre_types/com_odriverobotics_ODrive.html#ODrive.clear_errors).
+
+  This does not affect the axis state.
+
+  If the axis dropped into IDLE because of an error and the intent is to re-enable it, call `/request_axis_state`
+  instead with CLOSED_LOOP_CONTROL, which clears errors automatically.
 
 ### Data Types
 
