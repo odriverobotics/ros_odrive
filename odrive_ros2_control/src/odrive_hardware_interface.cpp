@@ -36,7 +36,9 @@ public:
 
 private:
     void on_can_msg(const can_frame& frame);
+    void set_axis_command_mode(const Axis& axis);
 
+    bool active_;
     EpollEventLoop event_loop_;
     std::vector<Axis> axes_;
     std::string can_intf_name_;
@@ -88,7 +90,7 @@ struct Axis {
     bool torque_input_enabled_ = false;
 
     template <typename T>
-    void send(const T& msg) {
+    void send(const T& msg) const {
         struct can_frame frame;
         frame.can_id = node_id_ << 5 | msg.cmd_id;
         frame.can_dlc = msg.msg_length;
@@ -121,7 +123,11 @@ CallbackReturn ODriveHardwareInterface::on_init(const hardware_interface::Hardwa
 
 CallbackReturn ODriveHardwareInterface::on_configure(const State&) {
     if (!can_intf_.init(can_intf_name_, &event_loop_, std::bind(&ODriveHardwareInterface::on_can_msg, this, _1))) {
-        RCLCPP_ERROR(rclcpp::get_logger("ODriveHardwareInterface"), "Failed to initialize SocketCAN on %s", can_intf_name_.c_str());
+        RCLCPP_ERROR(
+            rclcpp::get_logger("ODriveHardwareInterface"),
+            "Failed to initialize SocketCAN on %s",
+            can_intf_name_.c_str()
+        );
         return CallbackReturn::ERROR;
     }
     RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Initialized SocketCAN on %s", can_intf_name_.c_str());
@@ -138,16 +144,21 @@ CallbackReturn ODriveHardwareInterface::on_activate(const State&) {
 
     // This can be called several seconds before the controller finishes starting.
     // Therefore we enable the ODrives only in perform_command_mode_switch().
+
+    active_ = true;
+    for (auto& axis : axes_) {
+        set_axis_command_mode(axis);
+    }
+
     return CallbackReturn::SUCCESS;
 }
 
 CallbackReturn ODriveHardwareInterface::on_deactivate(const State&) {
     RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "deactivating ODrives...");
 
+    active_ = false;
     for (auto& axis : axes_) {
-        Set_Axis_State_msg_t msg;
-        msg.Axis_Requested_State = AXIS_STATE_IDLE;
-        axis.send(msg);
+        set_axis_command_mode(axis);
     }
 
     return CallbackReturn::SUCCESS;
@@ -210,8 +221,7 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
         std::array<std::pair<std::string, bool*>, 3> interfaces = {
             {{info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION, &axis.pos_input_enabled_},
              {info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY, &axis.vel_input_enabled_},
-             {info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT, &axis.torque_input_enabled_}}
-        };
+             {info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT, &axis.torque_input_enabled_}}};
 
         bool mode_switch = false;
 
@@ -234,36 +244,7 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
         }
 
         if (mode_switch) {
-            Set_Controller_Mode_msg_t msg;
-            if (axis.pos_input_enabled_) {
-                RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to position control", info_.joints[i].name.c_str());
-                msg.Control_Mode = CONTROL_MODE_POSITION_CONTROL;
-                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
-            } else if (axis.vel_input_enabled_) {
-                RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to velocity control", info_.joints[i].name.c_str());
-                msg.Control_Mode = CONTROL_MODE_VELOCITY_CONTROL;
-                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
-            } else {
-                RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to torque control", info_.joints[i].name.c_str());
-                msg.Control_Mode = CONTROL_MODE_TORQUE_CONTROL;
-                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
-            }
-
-            bool any_enabled = axis.pos_input_enabled_ || axis.vel_input_enabled_ || axis.torque_input_enabled_;
-
-            if (any_enabled) {
-                axis.send(msg); // Set control mode
-            }
-
-            // Set axis state
-            Clear_Errors_msg_t msg1;
-            msg1.Identify = 0;
-            axis.send(msg1);
-
-            // Set axis state
-            Set_Axis_State_msg_t msg2;
-            msg2.Axis_Requested_State = any_enabled ? AXIS_STATE_CLOSED_LOOP_CONTROL : AXIS_STATE_IDLE;
-            axis.send(msg2);
+            set_axis_command_mode(axis);
         }
     }
 
@@ -286,7 +267,7 @@ return_type ODriveHardwareInterface::write(const rclcpp::Time&, const rclcpp::Du
         if (axis.pos_input_enabled_) {
             Set_Input_Pos_msg_t msg;
             msg.Input_Pos = axis.pos_setpoint_ / (2 * M_PI);
-            msg.Vel_FF = axis.vel_input_enabled_ ? (axis.vel_setpoint_  / (2 * M_PI)) : 0.0f;
+            msg.Vel_FF = axis.vel_input_enabled_ ? (axis.vel_setpoint_ / (2 * M_PI)) : 0.0f;
             msg.Torque_FF = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0f;
             axis.send(msg);
         } else if (axis.vel_input_enabled_) {
@@ -312,6 +293,44 @@ void ODriveHardwareInterface::on_can_msg(const can_frame& frame) {
             axis.on_can_msg(timestamp_, frame);
         }
     }
+}
+
+void ODriveHardwareInterface::set_axis_command_mode(const Axis& axis) {
+    if (!active_) {
+        RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Interface inactive. Setting axis to idle.");
+        Set_Axis_State_msg_t idle_msg;
+        idle_msg.Axis_Requested_State = AXIS_STATE_IDLE;
+        axis.send(idle_msg);
+        return;
+    }
+
+    Set_Controller_Mode_msg_t control_msg;
+    Clear_Errors_msg_t clear_error_msg;
+    Set_Axis_State_msg_t state_msg;
+
+    clear_error_msg.Identify = 0;
+    control_msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
+    state_msg.Axis_Requested_State = AXIS_STATE_CLOSED_LOOP_CONTROL;
+
+    if (axis.pos_input_enabled_) {
+        RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting to position control.");
+        control_msg.Control_Mode = CONTROL_MODE_POSITION_CONTROL;
+    } else if (axis.vel_input_enabled_) {
+        RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting to velocity control.");
+        control_msg.Control_Mode = CONTROL_MODE_VELOCITY_CONTROL;
+    } else if (axis.torque_input_enabled_) {
+        RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting to torque control.");
+        control_msg.Control_Mode = CONTROL_MODE_TORQUE_CONTROL;
+    } else {
+        RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "No control mode specified. Setting to idle.");
+        state_msg.Axis_Requested_State = AXIS_STATE_IDLE;
+        axis.send(state_msg);
+        return;
+    }
+
+    axis.send(control_msg);
+    axis.send(clear_error_msg);
+    axis.send(state_msg);
 }
 
 void Axis::on_can_msg(const rclcpp::Time&, const can_frame& frame) {
