@@ -1,4 +1,5 @@
 #include "odrive_can_node.hpp"
+#include "odrive_enums.h"
 #include "epoll_event_loop.hpp"
 #include "byte_swap.hpp"
 #include <sys/eventfd.h>
@@ -31,6 +32,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     
     rclcpp::Node::declare_parameter<std::string>("interface", "can0");
     rclcpp::Node::declare_parameter<uint16_t>("node_id", 0);
+    rclcpp::Node::declare_parameter<bool>("axis_idle_on_shutdown", false);
 
     rclcpp::QoS ctrl_stat_qos(rclcpp::KeepAll{});
     ctrl_publisher_ = rclcpp::Node::create_publisher<ControllerStatus>("controller_status", ctrl_stat_qos);
@@ -49,6 +51,14 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 }
 
 void ODriveCanNode::deinit() {
+    if (axis_idle_on_shutdown_) {
+        struct can_frame frame;
+        frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
+        write_le<uint32_t>(ODriveAxisState::AXIS_STATE_IDLE, frame.data);
+        frame.can_dlc = 4;
+        can_intf_.send_can_frame(frame);
+    }
+
     sub_evt_.deinit();
     srv_evt_.deinit();
     can_intf_.deinit();
@@ -57,6 +67,7 @@ void ODriveCanNode::deinit() {
 bool ODriveCanNode::init(EpollEventLoop* event_loop) {
 
     node_id_ = rclcpp::Node::get_parameter("node_id").as_int();
+    axis_idle_on_shutdown_ = rclcpp::Node::get_parameter("axis_idle_on_shutdown").as_bool();
     std::string interface = rclcpp::Node::get_parameter("interface").as_string();
 
     if (!can_intf_.init(interface, event_loop, std::bind(&ODriveCanNode::recv_callback, this, _1))) {
@@ -195,13 +206,31 @@ void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::R
     (void)response;
 }
 
+void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response) {
+    RCLCPP_INFO(rclcpp::Node::get_logger(), "clearing errors");
+    srv_clear_errors_evt_.set();
+}
+
 void ODriveCanNode::request_state_callback() {
-    struct can_frame frame;
-    frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
+    uint32_t axis_state;
     {
         std::unique_lock<std::mutex> guard(axis_state_mutex_);
-        write_le<uint32_t>(axis_state_, frame.data);
+        axis_state = axis_state_;
     }
+
+    struct can_frame frame;
+
+    if (axis_state != 0) {
+        // Clear errors if requested state is not IDLE
+        frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
+        write_le<uint8_t>(0, frame.data);
+        frame.can_dlc = 1;
+        can_intf_.send_can_frame(frame);
+    }
+
+    // Set state
+    frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
+    write_le<uint32_t>(axis_state, frame.data);
     frame.can_dlc = 4;
     can_intf_.send_can_frame(frame);
 }

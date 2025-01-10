@@ -42,6 +42,7 @@ private:
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
     
     uint16_t node_id_;
+    bool axis_idle_on_shutdown_;
     SocketCanIntf can_intf_ = SocketCanIntf();
     
     short int ctrl_pub_flag_ = 0;
