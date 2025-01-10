@@ -52,7 +52,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
 void ODriveCanNode::deinit() {
     if (axis_idle_on_shutdown_) {
-        struct can_frame frame;
+        struct can_frame frame = {};
         frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
         write_le<uint32_t>(ODriveAxisState::AXIS_STATE_IDLE, frame.data);
         frame.can_dlc = 4;
@@ -204,11 +204,6 @@ void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::R
     srv_clear_errors_evt_.set();
     (void)request;  // Suppress unused parameter warning
     (void)response;
-}
-
-void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response) {
-    RCLCPP_INFO(rclcpp::Node::get_logger(), "clearing errors");
-    srv_clear_errors_evt_.set();
 }
 
 void ODriveCanNode::request_state_callback() {
