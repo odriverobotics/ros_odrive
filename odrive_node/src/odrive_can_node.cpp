@@ -155,6 +155,14 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_pub_flag_ |= 0b1000; 
             break;
         }
+        case CmdId::kSetAxisState:
+        case CmdId::kSetControllerMode:
+        case CmdId::kSetInputPos:
+        case CmdId::kSetInputVel:
+        case CmdId::kSetInputTorque:
+        case CmdId::kClearErrors: {
+            break;
+        }
         default: {
             RCLCPP_WARN(rclcpp::Node::get_logger(), "Received unused message: ID = 0x%x", (frame.can_id & 0x1F));
             break;
