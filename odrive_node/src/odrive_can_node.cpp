@@ -161,7 +161,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         case CmdId::kSetInputVel:
         case CmdId::kSetInputTorque:
         case CmdId::kClearErrors: {
-            break;
+            break; // Ignore commands coming from another master/host on the bus
         }
         default: {
             RCLCPP_WARN(rclcpp::Node::get_logger(), "Received unused message: ID = 0x%x", (frame.can_id & 0x1F));
