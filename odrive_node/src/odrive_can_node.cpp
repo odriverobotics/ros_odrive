@@ -258,14 +258,14 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
         RCLCPP_INFO(rclcpp::Node::get_logger(), "requesting axis state: %d", axis_state_);
     }
     
-    // For CLOSED_LOOP_CONTROL requests, return immediately to allow Python node to start sending commands
+    // For CLOSED_LOOP_CONTROL requests, return immediately to allow node to start sending commands
     bool is_closed_loop_request = request->axis_requested_state == ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
     
     srv_evt_.set();
 
     if (is_closed_loop_request) {
         // For closed loop control, return immediately with current status
-        // The Python node will poll the status to confirm the state change
+        // The node will poll the status to confirm the state change
         std::unique_lock<std::mutex> guard(ctrl_stat_mutex_);
         response->axis_state = ctrl_stat_.axis_state;
         response->active_errors = ctrl_stat_.active_errors;
