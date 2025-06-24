@@ -69,6 +69,14 @@ private:
     EpollEvent srv_clear_errors_evt_;
     rclcpp::Service<Empty>::SharedPtr service_clear_errors_;
 
+private:
+    bool enable_watchdog_feed_;
+    double watchdog_feed_rate_hz_;
+    std::atomic<bool> watchdog_enabled_;
+    rclcpp::TimerBase::SharedPtr watchdog_timer_;
+    std::chrono::steady_clock::time_point last_control_msg_time_;
+    
+    void watchdog_feed_callback();
 };
 
 #endif // ODRIVE_CAN_NODE_HPP
