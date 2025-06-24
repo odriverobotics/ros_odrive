@@ -33,6 +33,8 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     rclcpp::Node::declare_parameter<std::string>("interface", "can0");
     rclcpp::Node::declare_parameter<uint16_t>("node_id", 0);
     rclcpp::Node::declare_parameter<bool>("axis_idle_on_shutdown", false);
+    rclcpp::Node::declare_parameter<bool>("enable_watchdog_feed", true);
+    rclcpp::Node::declare_parameter<double>("watchdog_feed_rate_hz", 50.0);
 
     rclcpp::QoS ctrl_stat_qos(rclcpp::KeepAll{});
     ctrl_publisher_ = rclcpp::Node::create_publisher<ControllerStatus>("controller_status", ctrl_stat_qos);
@@ -48,9 +50,15 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS srv_clear_errors_qos(rclcpp::KeepAll{});
     service_clear_errors_ = rclcpp::Node::create_service<Empty>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos.get_rmw_qos_profile());
+
+    // Initialize watchdog feed state
+    watchdog_enabled_ = false;
+    last_control_msg_time_ = std::chrono::steady_clock::now();
 }
 
 void ODriveCanNode::deinit() {
+    watchdog_enabled_ = false; // Stop watchdog feeding
+    
     if (axis_idle_on_shutdown_) {
         struct can_frame frame;
         frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
@@ -69,6 +77,8 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     node_id_ = rclcpp::Node::get_parameter("node_id").as_int();
     axis_idle_on_shutdown_ = rclcpp::Node::get_parameter("axis_idle_on_shutdown").as_bool();
     std::string interface = rclcpp::Node::get_parameter("interface").as_string();
+    enable_watchdog_feed_ = rclcpp::Node::get_parameter("enable_watchdog_feed").as_bool();
+    watchdog_feed_rate_hz_ = rclcpp::Node::get_parameter("watchdog_feed_rate_hz").as_double();
 
     if (!can_intf_.init(interface, event_loop, std::bind(&ODriveCanNode::recv_callback, this, _1))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize socket can interface: %s", interface.c_str());
@@ -86,9 +96,53 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize clear errors service event");
         return false;
     }
+    
+    // Initialize watchdog timer if enabled
+    if (enable_watchdog_feed_) {
+        watchdog_timer_ = rclcpp::Node::create_wall_timer(
+            std::chrono::milliseconds(static_cast<int>(1000.0 / watchdog_feed_rate_hz_)),
+            std::bind(&ODriveCanNode::watchdog_feed_callback, this)
+        );
+        RCLCPP_INFO(rclcpp::Node::get_logger(), "Watchdog feed enabled at %.1f Hz", watchdog_feed_rate_hz_);
+    }
+    
     RCLCPP_INFO(rclcpp::Node::get_logger(), "node_id: %d", node_id_);
     RCLCPP_INFO(rclcpp::Node::get_logger(), "interface: %s", interface.c_str());
     return true;
+}
+
+void ODriveCanNode::watchdog_feed_callback() {
+    if (!watchdog_enabled_) {
+        return;
+    }
+    
+    // Send a zero velocity command to feed the watchdog
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | kSetInputVel;
+    
+    float velocity = 0.0f;
+    float torque = 0.0f;
+    
+    // Use last received values if available and recent
+    auto now = std::chrono::steady_clock::now();
+    auto time_since_last_msg = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_msg_time_).count();
+    
+    if (time_since_last_msg < 100) { // Use last message if less than 100ms old
+        std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
+        if (ctrl_msg_.control_mode == ControlMode::kVelocityControl) {
+            velocity = ctrl_msg_.input_vel;
+            torque = ctrl_msg_.input_torque;
+        }
+    }
+    
+    write_le<float>(velocity, frame.data);
+    write_le<float>(torque, frame.data + 4);
+    frame.can_dlc = 8;
+    
+    if (!can_intf_.send_can_frame(frame)) {
+        RCLCPP_WARN_THROTTLE(rclcpp::Node::get_logger(), *rclcpp::Node::get_clock(), 1000, 
+                             "Failed to send watchdog feed frame");
+    }
 }
 
 void ODriveCanNode::recv_callback(const can_frame& frame) {
@@ -103,6 +157,16 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
             ctrl_stat_.axis_state        = read_le<uint8_t>(frame.data + 4);
             ctrl_stat_.procedure_result  = read_le<uint8_t>(frame.data + 5);
             ctrl_stat_.trajectory_done_flag = read_le<bool>(frame.data + 6);
+            
+            // Enable watchdog feeding when entering closed loop control
+            if (ctrl_stat_.axis_state == ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL && !watchdog_enabled_) {
+                watchdog_enabled_ = true;
+                RCLCPP_INFO(rclcpp::Node::get_logger(), "Entered closed loop control, enabling watchdog feed");
+            } else if (ctrl_stat_.axis_state != ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL && watchdog_enabled_) {
+                watchdog_enabled_ = false;
+                RCLCPP_INFO(rclcpp::Node::get_logger(), "Left closed loop control, disabling watchdog feed");
+            }
+            
             ctrl_pub_flag_ |= 0b0001;
             fresh_heartbeat_.notify_one();
             break;
@@ -183,6 +247,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
 void ODriveCanNode::subscriber_callback(const ControlMessage::SharedPtr msg) {
     std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
     ctrl_msg_ = *msg;
+    last_control_msg_time_ = std::chrono::steady_clock::now();
     sub_evt_.set();
 }
 
@@ -192,20 +257,37 @@ void ODriveCanNode::service_callback(const std::shared_ptr<AxisState::Request> r
         axis_state_ = request->axis_requested_state;
         RCLCPP_INFO(rclcpp::Node::get_logger(), "requesting axis state: %d", axis_state_);
     }
+    
+    // For CLOSED_LOOP_CONTROL requests, return immediately to allow node to start sending commands
+    bool is_closed_loop_request = request->axis_requested_state == ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
+    
     srv_evt_.set();
 
-    // Wait for at least 1 second for a new heartbeat to arrive.
-    // If the requested state is something other than CLOSED_LOOP_CONTROL, also
-    // wait for the procedure to complete (procedure_result != BUSY).
-    std::unique_lock<std::mutex> guard(ctrl_stat_mutex_); // define lock for controller status
+    if (is_closed_loop_request) {
+        // For closed loop control, return immediately with current status
+        // The node will poll the status to confirm the state change
+        std::unique_lock<std::mutex> guard(ctrl_stat_mutex_);
+        response->axis_state = ctrl_stat_.axis_state;
+        response->active_errors = ctrl_stat_.active_errors;
+        response->procedure_result = ctrl_stat_.procedure_result;
+        RCLCPP_INFO(rclcpp::Node::get_logger(), "Returning immediately for CLOSED_LOOP_CONTROL request");
+        return;
+    }
+
+    // For other states, wait for the procedure to complete
+    std::unique_lock<std::mutex> guard(ctrl_stat_mutex_);
     auto call_time = std::chrono::steady_clock::now();
-    fresh_heartbeat_.wait(guard, [this, &call_time, &request]() {
+    auto timeout = std::chrono::seconds(5); // 5 second timeout for non-closed-loop states
+    
+    bool wait_result = fresh_heartbeat_.wait_for(guard, timeout, [this, &call_time]() {
         bool is_busy = this->ctrl_stat_.procedure_result == ODriveProcedureResult::PROCEDURE_RESULT_BUSY;
-        bool requested_closed_loop = request->axis_requested_state == ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL;
-        bool minimum_time_passed = (std::chrono::steady_clock::now() - call_time >= std::chrono::seconds(1));
-        bool complete = (requested_closed_loop || !is_busy) && minimum_time_passed;
-        return complete;
-        }); // wait for procedure_result
+        bool minimum_time_passed = (std::chrono::steady_clock::now() - call_time >= std::chrono::milliseconds(500));
+        return !is_busy && minimum_time_passed;
+    });
+    
+    if (!wait_result) {
+        RCLCPP_WARN(rclcpp::Node::get_logger(), "Timeout waiting for state change to complete");
+    }
     
     response->axis_state = ctrl_stat_.axis_state;
     response->active_errors = ctrl_stat_.active_errors;
@@ -231,14 +313,21 @@ void ODriveCanNode::request_state_callback() {
         frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
         write_le<uint8_t>(0, frame.data);
         frame.can_dlc = 1;
-        can_intf_.send_can_frame(frame);
+        if (!can_intf_.send_can_frame(frame)) {
+            RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to send clear errors frame");
+        }
+        
+        // Small delay to ensure error clear is processed
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     // Set state
     frame.can_id = node_id_ << 5 | CmdId::kSetAxisState;
     write_le<uint32_t>(axis_state, frame.data);
     frame.can_dlc = 4;
-    can_intf_.send_can_frame(frame);
+    if (!can_intf_.send_can_frame(frame)) {
+        RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to send set axis state frame");
+    }
 }
 
 void ODriveCanNode::request_clear_errors_callback() {
@@ -246,7 +335,9 @@ void ODriveCanNode::request_clear_errors_callback() {
     frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
     write_le<uint8_t>(0, frame.data);
     frame.can_dlc = 1;
-    can_intf_.send_can_frame(frame);
+    if (!can_intf_.send_can_frame(frame)) {
+        RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to send clear errors frame");
+    }
 }
 
 void ODriveCanNode::ctrl_msg_callback() {
@@ -261,7 +352,9 @@ void ODriveCanNode::ctrl_msg_callback() {
         control_mode = ctrl_msg_.control_mode;
     }
     frame.can_dlc = 8;
-    can_intf_.send_can_frame(frame);
+    if (!can_intf_.send_can_frame(frame)) {
+        RCLCPP_WARN(rclcpp::Node::get_logger(), "Failed to send controller mode frame");
+    }
     
     frame = can_frame{};
     switch (control_mode) {
@@ -301,7 +394,9 @@ void ODriveCanNode::ctrl_msg_callback() {
             return;
     }
 
-    can_intf_.send_can_frame(frame);
+    if (!can_intf_.send_can_frame(frame)) {
+        RCLCPP_WARN(rclcpp::Node::get_logger(), "Failed to send control input frame");
+    }
 }
 
 inline bool ODriveCanNode::verify_length(const std::string&name, uint8_t expected, uint8_t length) {
