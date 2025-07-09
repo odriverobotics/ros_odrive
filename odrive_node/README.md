@@ -60,6 +60,12 @@ For information about installation, prerequisites and getting started, check out
   If the axis dropped into IDLE because of an error and the intent is to re-enable it, call `/request_axis_state`
   instead with CLOSED_LOOP_CONTROL, which clears errors automatically.
 
+* `/estop`: Emergency stop service that immediately disarms the axis.
+
+  This service sends an empty payload CAN frame that causes the ODrive axis to enter IDLE state with "ESTOP_REQUESTED" as the disarm reason. The service call completes immediately without waiting for confirmation from the ODrive.
+
+  This is intended for emergency situations where the motor needs to be stopped as quickly as possible. After an estop, the axis will need to be re-enabled using `/request_axis_state` with the desired state, which will automatically clear the estop error (See `/request_axis_state` above).
+
 ### Data Types
 
 All of the Message/Service fields are directly related to their corresponding CAN message. For more detailed information about each type, and how to interpet the data, please refer to the [ODrive CAN protocol documentation](https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#messages).
