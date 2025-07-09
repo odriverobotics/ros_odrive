@@ -7,6 +7,7 @@
 
 enum CmdId : uint32_t {
     kHeartbeat = 0x001,            // ControllerStatus  - publisher
+    kEstop = 0x002,                // Estop             - service
     kGetError = 0x003,             // SystemStatus      - publisher
     kSetAxisState = 0x007,         // SetAxisState      - service
     kGetEncoderEstimates = 0x009,  // ControllerStatus  - publisher
@@ -48,6 +49,9 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS srv_clear_errors_qos(rclcpp::KeepAll{});
     service_clear_errors_ = rclcpp::Node::create_service<Empty>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos.get_rmw_qos_profile());
+
+    rclcpp::QoS srv_estop_qos(rclcpp::KeepAll{});
+    service_estop_ = rclcpp::Node::create_service<Empty>("estop", std::bind(&ODriveCanNode::service_estop_callback, this, _1, _2), srv_estop_qos.get_rmw_qos_profile());
 }
 
 void ODriveCanNode::deinit() {
@@ -61,6 +65,8 @@ void ODriveCanNode::deinit() {
 
     sub_evt_.deinit();
     srv_evt_.deinit();
+    srv_clear_errors_evt_.deinit();
+    srv_estop_evt_.deinit();
     can_intf_.deinit();
 }
 
@@ -84,6 +90,10 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     }
     if (!srv_clear_errors_evt_.init(event_loop, std::bind(&ODriveCanNode::request_clear_errors_callback, this))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize clear errors service event");
+        return false;
+    }
+    if (!srv_estop_evt_.init(event_loop, std::bind(&ODriveCanNode::request_estop_callback, this))) {
+        RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize estop service event");
         return false;
     }
     RCLCPP_INFO(rclcpp::Node::get_logger(), "node_id: %d", node_id_);
@@ -160,7 +170,8 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         case CmdId::kSetInputPos:
         case CmdId::kSetInputVel:
         case CmdId::kSetInputTorque:
-        case CmdId::kClearErrors: {
+        case CmdId::kClearErrors:
+        case CmdId::kEstop: {
             break; // Ignore commands coming from another master/host on the bus
         }
         default: {
@@ -217,6 +228,11 @@ void ODriveCanNode::service_clear_errors_callback(const std::shared_ptr<Empty::R
     srv_clear_errors_evt_.set();
 }
 
+void ODriveCanNode::service_estop_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response) {
+    RCLCPP_WARN(rclcpp::Node::get_logger(), "emergency stop requested");
+    srv_estop_evt_.set();
+}
+
 void ODriveCanNode::request_state_callback() {
     uint32_t axis_state;
     {
@@ -246,6 +262,13 @@ void ODriveCanNode::request_clear_errors_callback() {
     frame.can_id = node_id_ << 5 | CmdId::kClearErrors;
     write_le<uint8_t>(0, frame.data);
     frame.can_dlc = 1;
+    can_intf_.send_can_frame(frame);
+}
+
+void ODriveCanNode::request_estop_callback() {
+    struct can_frame frame;
+    frame.can_id = node_id_ << 5 | CmdId::kEstop;
+    frame.can_dlc = 0;
     can_intf_.send_can_frame(frame);
 }
 

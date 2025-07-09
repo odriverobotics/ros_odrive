@@ -36,8 +36,10 @@ private:
     void subscriber_callback(const ControlMessage::SharedPtr msg);
     void service_callback(const std::shared_ptr<AxisState::Request> request, std::shared_ptr<AxisState::Response> response);
     void service_clear_errors_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response);
+    void service_estop_callback(const std::shared_ptr<Empty::Request> request, std::shared_ptr<Empty::Response> response);
     void request_state_callback();
     void request_clear_errors_callback();
+    void request_estop_callback();
     void ctrl_msg_callback();
     inline bool verify_length(const std::string&name, uint8_t expected, uint8_t length);
     
@@ -68,6 +70,9 @@ private:
 
     EpollEvent srv_clear_errors_evt_;
     rclcpp::Service<Empty>::SharedPtr service_clear_errors_;
+
+    EpollEvent srv_estop_evt_;
+    rclcpp::Service<Empty>::SharedPtr service_estop_;
 
 };
 
