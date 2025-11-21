@@ -45,6 +45,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
 
     rclcpp::QoS srv_qos(rclcpp::KeepAll{});
     rclcpp::QoS srv_clear_errors_qos(rclcpp::KeepAll{});
+
     #if RCLCPP_VERSION_MAJOR >= 18 
     // For ros2 jazzy and above. 
     // PR about deprecation of get_rmw_qos_profile: 
@@ -56,6 +57,7 @@ ODriveCanNode::ODriveCanNode(const std::string& node_name) : rclcpp::Node(node_n
     auto srv_clear_errors_qos_profile = srv_clear_errors_qos.get_rmw_qos_profile();
     auto srv_qos_profile = srv_qos.get_rmw_qos_profile();
     #endif
+
     service_ = rclcpp::Node::create_service<AxisState>("request_axis_state", std::bind(&ODriveCanNode::service_callback, this, _1, _2), srv_qos_profile);
     service_clear_errors_ = rclcpp::Node::create_service<Empty>("clear_errors", std::bind(&ODriveCanNode::service_clear_errors_callback, this, _1, _2), srv_clear_errors_qos_profile);
 }
