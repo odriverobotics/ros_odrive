@@ -2,6 +2,7 @@
 #define ODRIVE_CAN_NODE_HPP
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/version.h>
 #include "odrive_can/msg/o_drive_status.hpp"
 #include "odrive_can/msg/controller_status.hpp"
 #include "odrive_can/msg/control_message.hpp"
