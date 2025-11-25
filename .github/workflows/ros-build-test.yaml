@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ros-version: [humble, iron, jazzy]
+        ros-version: [humble, iron, jazzy, kilted]
     
     steps:
       - name: Check out code
