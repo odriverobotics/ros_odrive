@@ -59,10 +59,10 @@ For information about installation, prerequisites and getting started, check out
 
   If the requested state is anything other than IDLE, this sends a `clear_errors` request to the ODrive (see below) before sending the state request.
 
-  **Example** – request CLOSED_LOOP_CONTROL from the CLI:
+  **Example** – request CLOSED_LOOP_CONTROL from the CLI (replace `[odrive_node_name]` with the name of your ODrive node instance):
 
   ```bash
-  ros2 service call /request_axis_state odrive_can/srv/AxisState "{axis_requested_state: 8}"
+  ros2 service call [odrive_node_name]/request_axis_state odrive_can/srv/AxisState "{axis_requested_state: 8}"
   ```
 
 * `/clear_errors`: Manual service call to clear disarm_reason and procedure_result, reset the LED color and re-arm the brake resistor if applicable. See also [`clear_errors()`](https://docs.odriverobotics.com/v/latest/fibre_types/com_odriverobotics_ODrive.html#ODrive.clear_errors).
