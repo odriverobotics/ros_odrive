@@ -49,9 +49,21 @@ For information about installation, prerequisites and getting started, check out
 
 * `/request_axis_state`: Sets the axes requested state.
 
-  This service requires regular heartbeat messages from the ODrive to determine the procedure result and will block until the procedure completes, with a minimum call time of 1 second.
+  Input/output parameters: [`odrive_can/srv/AxisState`](srv/AxisState.srv)
+
+  When requesting CLOSED_LOOP_CONTROL or IDLE, the service returns after entering
+  the new axis state. When requesting other states (e.g. ENCODER_OFFSET_CALIBRATION),
+  the service waits for the axis state to complete before it returns.
+
+  This service requires regular heartbeat messages from the ODrive to function properly. See [configuration instructions](https://docs.odriverobotics.com/v/latest/guides/ros-package.html#setting-up-the-odrive).
 
   If the requested state is anything other than IDLE, this sends a `clear_errors` request to the ODrive (see below) before sending the state request.
+
+  **Example** – request CLOSED_LOOP_CONTROL from the CLI:
+
+  ```bash
+  ros2 service call /request_axis_state odrive_can/srv/AxisState "{axis_requested_state: 8}"
+  ```
 
 * `/clear_errors`: Manual service call to clear disarm_reason and procedure_result, reset the LED color and re-arm the brake resistor if applicable. See also [`clear_errors()`](https://docs.odriverobotics.com/v/latest/fibre_types/com_odriverobotics_ODrive.html#ODrive.clear_errors).
 

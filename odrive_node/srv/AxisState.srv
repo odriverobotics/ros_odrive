@@ -1,5 +1,17 @@
+# The AxisState to run or transition to (e.g. 8 = CLOSED_LOOP_CONTROL, 1 = IDLE).
+# See https://docs.odriverobotics.com/v/latest/fibre_types/com_odriverobotics_ODrive.html#ODrive.Axis.requested_state
 uint32 axis_requested_state
+
 ---
+
+# Bitfield of active errors at the time the service returns.
+# See https://docs.odriverobotics.com/v/latest/fibre_types/com_odriverobotics_ODrive.html#ODrive.Axis.active_errors
 uint32 active_errors
+
+# The axis state at the time the service returns.
+# See https://docs.odriverobotics.com/v/latest/fibre_types/com_odriverobotics_ODrive.html#ODrive.Axis.current_state
 uint8 axis_state
+
+# Result of the axis state or state transition (0 = SUCCESS).
+# See https://docs.odriverobotics.com/v/latest/fibre_types/com_odriverobotics_ODrive.html#ODrive.Axis.procedure_result
 uint8 procedure_result
