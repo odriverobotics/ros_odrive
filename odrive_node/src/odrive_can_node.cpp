@@ -79,6 +79,8 @@ bool ODriveCanNode::init(EpollEventLoop* event_loop) {
     axis_idle_on_shutdown_ = rclcpp::Node::get_parameter("axis_idle_on_shutdown").as_bool();
     std::string interface = rclcpp::Node::get_parameter("interface").as_string();
 
+    odrv_stat_.node_id = node_id_;
+
     if (!can_intf_.init(interface, event_loop, std::bind(&ODriveCanNode::recv_callback, this, _1))) {
         RCLCPP_ERROR(rclcpp::Node::get_logger(), "Failed to initialize socket can interface: %s", interface.c_str());
         return false;
@@ -151,6 +153,7 @@ void ODriveCanNode::recv_callback(const can_frame& frame) {
         case CmdId::kGetBusVoltageCurrent: {
             if (!verify_length("kGetBusVoltageCurrent", 8, frame.can_dlc)) break;
             std::lock_guard<std::mutex> guard(odrv_stat_mutex_);
+            odrv_stat_.header.stamp = rclcpp::Clock().now();
             odrv_stat_.bus_voltage = read_le<float>(frame.data + 0);
             odrv_stat_.bus_current = read_le<float>(frame.data + 4);
             odrv_pub_flag_ |= 0b100;
