@@ -29,11 +29,6 @@ add_executable(odrive_can_node
   src/main.cpp
   include/odrive_can_node.hpp)
 
-ament_target_dependencies(odrive_can_node
-  rclcpp
-  std_srvs
-)
-
 target_compile_features(odrive_can_node PRIVATE cxx_std_20)
 
 install(
@@ -48,6 +43,9 @@ install(DIRECTORY launch
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-target_link_libraries(odrive_can_node "${cpp_typesupport_target}")
+target_link_libraries(odrive_can_node
+	rclcpp::rclcpp
+	std_srvs::std_srvs
+	"${cpp_typesupport_target}")
 
 ament_package()
