@@ -1,3 +1,9 @@
+# TODO
+
+- [ ] Invert Axis
+- [ ] Joint State Broadcaster
+- [ ] Simple Transmission Interface
+
 # ROS2 Package for ODrive
 
 This repository contains ROS2 packages for the [ODrive motor controller](https://odriverobotics.com):
