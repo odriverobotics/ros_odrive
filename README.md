@@ -1,3 +1,10 @@
+# TODO
+
+- [ ] Joint State Broadcaster
+- [ ] Simple Transmission Interface
+
+> In transmission it's using double and there are cases gear will move in same or opposite direction. This conversion should be handled by simple transmission interface.
+
 # ROS2 Package for ODrive
 
 This repository contains ROS2 packages for the [ODrive motor controller](https://odriverobotics.com):
