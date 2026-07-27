@@ -1,0 +1,38 @@
+launch:
+
+- node:
+    pkg: "odrive_can"
+    exec: "odrive_can_node"
+    name: "can_node6"
+    namespace: "odrive_axis0"
+    param:
+    -
+      name: "node_id"
+      value: 6
+    -
+      name: "interface"
+      value: "can0"
+- node:
+    pkg: "odrive_can"
+    exec: "odrive_can_node"
+    name: "can_node7"
+    namespace: "odrive_axis0"
+    param:
+    -
+      name: "node_id"
+      value: 7
+    -
+      name: "interface"
+      value: "can0"
+- node:
+    pkg: "odrive_can"
+    exec: "odrive_can_node"
+    name: "can_node8"
+    namespace: "odrive_axis0"
+    param:
+    -
+      name: "node_id"
+      value: 8
+    -
+      name: "interface"
+      value: "can0"
