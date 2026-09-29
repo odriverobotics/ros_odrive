@@ -300,8 +300,8 @@ void ODriveCanNode::ctrl_msg_callback() {
             frame.can_id = node_id_ << 5 | kSetInputPos;
             std::lock_guard<std::mutex> guard(ctrl_msg_mutex_);
             write_le<float>(ctrl_msg_.input_pos,  frame.data);
-            write_le<int8_t>(((int8_t)((ctrl_msg_.input_vel) * 1000)),    frame.data + 4);
-            write_le<int8_t>(((int8_t)((ctrl_msg_.input_torque) * 1000)), frame.data + 6);
+            write_le<int16_t>(static_cast<int16_t>(ctrl_msg_.input_vel * 1000),    frame.data + 4);
+            write_le<int16_t>(static_cast<int16_t>(ctrl_msg_.input_torque * 1000), frame.data + 6);
             frame.can_dlc = 8;
             break;
         }    
