@@ -38,7 +38,8 @@ private:
     void on_can_msg(const can_frame& frame);
     void set_axis_command_mode(const Axis& axis);
 
-    bool active_;
+    bool active_ = false;
+    bool use_mock_hardware_ = false;
     EpollEventLoop event_loop_;
     std::vector<Axis> axes_;
     std::string can_intf_name_;
@@ -112,16 +113,50 @@ CallbackReturn ODriveHardwareInterface::on_init(const hardware_interface::Hardwa
         return CallbackReturn::ERROR;
     }
 
-    can_intf_name_ = info_.hardware_parameters["can"];
+    auto mock_parameter = info_.hardware_parameters.find("use_mock_hardware");
+    use_mock_hardware_ = mock_parameter != info_.hardware_parameters.end() &&
+                         (mock_parameter->second == "true" || mock_parameter->second == "1");
 
-    for (auto& joint : info_.joints) {
-        axes_.emplace_back(&can_intf_, std::stoi(joint.parameters.at("node_id")));
+    if (!use_mock_hardware_) {
+        auto can_parameter = info_.hardware_parameters.find("can");
+        if (can_parameter == info_.hardware_parameters.end()) {
+            RCLCPP_ERROR(rclcpp::get_logger("ODriveHardwareInterface"), "Missing required 'can' parameter");
+            return CallbackReturn::ERROR;
+        }
+        can_intf_name_ = can_parameter->second;
+    }
+
+    for (size_t i = 0; i < info_.joints.size(); ++i) {
+        const auto& joint = info_.joints[i];
+        auto node_id_parameter = joint.parameters.find("node_id");
+        if (node_id_parameter == joint.parameters.end() && !use_mock_hardware_) {
+            RCLCPP_ERROR(
+                rclcpp::get_logger("ODriveHardwareInterface"),
+                "Missing required 'node_id' parameter for joint %s",
+                joint.name.c_str()
+            );
+            return CallbackReturn::ERROR;
+        }
+        uint32_t node_id = node_id_parameter == joint.parameters.end() ? static_cast<uint32_t>(i)
+                                                                       : std::stoi(node_id_parameter->second);
+        axes_.emplace_back(&can_intf_, node_id);
     }
 
     return CallbackReturn::SUCCESS;
 }
 
 CallbackReturn ODriveHardwareInterface::on_configure(const State&) {
+    if (use_mock_hardware_) {
+        for (auto& axis : axes_) {
+            axis.pos_estimate_ = 0.0;
+            axis.vel_estimate_ = 0.0;
+            axis.torque_target_ = 0.0;
+            axis.torque_estimate_ = 0.0;
+        }
+        RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Configured mock ODrive hardware");
+        return CallbackReturn::SUCCESS;
+    }
+
     if (!can_intf_.init(can_intf_name_, &event_loop_, std::bind(&ODriveHardwareInterface::on_can_msg, this, _1))) {
         RCLCPP_ERROR(
             rclcpp::get_logger("ODriveHardwareInterface"),
@@ -135,7 +170,9 @@ CallbackReturn ODriveHardwareInterface::on_configure(const State&) {
 }
 
 CallbackReturn ODriveHardwareInterface::on_cleanup(const State&) {
-    can_intf_.deinit();
+    if (!use_mock_hardware_) {
+        can_intf_.deinit();
+    }
     return CallbackReturn::SUCCESS;
 }
 
@@ -251,7 +288,36 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
     return return_type::OK;
 }
 
-return_type ODriveHardwareInterface::read(const rclcpp::Time& timestamp, const rclcpp::Duration&) {
+return_type ODriveHardwareInterface::read(const rclcpp::Time& timestamp, const rclcpp::Duration& period) {
+    if (use_mock_hardware_) {
+        for (auto& axis : axes_) {
+            if (!active_) {
+                axis.vel_estimate_ = 0.0;
+                axis.torque_target_ = 0.0;
+                axis.torque_estimate_ = 0.0;
+            } else if (axis.pos_input_enabled_) {
+                axis.pos_estimate_ = axis.pos_setpoint_;
+                axis.vel_estimate_ = axis.vel_input_enabled_ ? axis.vel_setpoint_ : 0.0;
+                axis.torque_target_ = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0;
+                axis.torque_estimate_ = axis.torque_target_;
+            } else if (axis.vel_input_enabled_) {
+                axis.vel_estimate_ = axis.vel_setpoint_;
+                axis.pos_estimate_ += axis.vel_estimate_ * period.seconds();
+                axis.torque_target_ = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0;
+                axis.torque_estimate_ = axis.torque_target_;
+            } else if (axis.torque_input_enabled_) {
+                axis.vel_estimate_ = 0.0;
+                axis.torque_target_ = axis.torque_setpoint_;
+                axis.torque_estimate_ = axis.torque_setpoint_;
+            } else {
+                axis.vel_estimate_ = 0.0;
+                axis.torque_target_ = 0.0;
+                axis.torque_estimate_ = 0.0;
+            }
+        }
+        return return_type::OK;
+    }
+
     timestamp_ = timestamp;
 
     while (can_intf_.read_nonblocking()) {
@@ -262,6 +328,10 @@ return_type ODriveHardwareInterface::read(const rclcpp::Time& timestamp, const r
 }
 
 return_type ODriveHardwareInterface::write(const rclcpp::Time&, const rclcpp::Duration&) {
+    if (use_mock_hardware_) {
+        return return_type::OK;
+    }
+
     for (auto& axis : axes_) {
         // Send the CAN message that fits the set of enabled setpoints
         if (axis.pos_input_enabled_) {
@@ -296,6 +366,10 @@ void ODriveHardwareInterface::on_can_msg(const can_frame& frame) {
 }
 
 void ODriveHardwareInterface::set_axis_command_mode(const Axis& axis) {
+    if (use_mock_hardware_) {
+        return;
+    }
+
     if (!active_) {
         RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Interface inactive. Setting axis to idle.");
         Set_Axis_State_msg_t idle_msg;

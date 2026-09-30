@@ -34,10 +34,12 @@ For a high level usage example, see the [BotWheel Explorer ROS2 Package](../odri
 Top level:
 
 - `can`: Name of the CAN interface to run on
+- `use_mock_hardware`: Set to `true` to run without CAN hardware. The mock mirrors position commands, integrates
+  velocity commands into position, and models effort-only commands as a locked axis. Defaults to `false`.
 
 Per joint:
 
-- `node_id`: `node_id` of the ODrive
+- `node_id`: `node_id` of the ODrive. Optional when `use_mock_hardware` is enabled.
 
 ## Command Interfaces
 
