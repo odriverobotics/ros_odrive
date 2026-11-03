@@ -8,7 +8,19 @@
 #include "rclcpp/rclcpp.hpp"
 #include "socket_can.hpp"
 
+#include <chrono>
+#include <optional>
+
 namespace odrive_ros2_control {
+
+constexpr char HW_IF_AXIS_ERROR[] = "axis_error";
+constexpr char HW_IF_AXIS_STATE[] = "axis_state";
+constexpr char HW_IF_PROCEDURE_RESULT[] = "procedure_result";
+constexpr char HW_IF_TRAJECTORY_DONE_FLAG[] = "trajectory_done_flag";
+constexpr char HW_IF_ACTIVE_ERRORS[] = "active_errors";
+constexpr char HW_IF_DISARM_REASON[] = "disarm_reason";
+constexpr char HW_IF_HEARTBEAT_AGE[] = "heartbeat_age";
+constexpr char HW_IF_ERROR_AGE[] = "error_age";
 
 class Axis;
 
@@ -53,6 +65,8 @@ struct Axis {
 
     void on_can_msg();
 
+    void reset_status_feedback();
+
     SocketCanIntf* can_intf_;
     uint32_t node_id_;
 
@@ -63,18 +77,24 @@ struct Axis {
 
     // State (ODrives => ros2_control)
     // rclcpp::Time encoder_estimates_timestamp_;
-    // uint32_t axis_error_ = 0;
-    // uint8_t axis_state_ = 0;
-    // uint8_t procedure_result_ = 0;
-    // uint8_t trajectory_done_flag_ = 0;
+    // Use doubles for the ros2_control state interfaces; NaN means not received.
+    // Every uint32_t error mask is represented exactly, including unknown bits.
+    double axis_error_ = NAN;
+    double axis_state_ = NAN;
+    double procedure_result_ = NAN;
+    double trajectory_done_flag_ = NAN;
+    std::optional<std::chrono::steady_clock::time_point> heartbeat_received_at_;
+    double heartbeat_age_ = NAN; // [s]
     double pos_estimate_ = NAN; // [rad]
     double vel_estimate_ = NAN; // [rad/s]
     // double iq_setpoint_ = NAN;
     // double iq_measured_ = NAN;
     double torque_target_ = NAN; // [Nm]
     double torque_estimate_ = NAN; // [Nm]
-    // uint32_t active_errors_ = 0;
-    // uint32_t disarm_reason_ = 0;
+    double active_errors_ = NAN;
+    double disarm_reason_ = NAN;
+    std::optional<std::chrono::steady_clock::time_point> error_received_at_;
+    double error_age_ = NAN; // [s]
     // double fet_temperature_ = NAN;
     // double motor_temperature_ = NAN;
     // double bus_voltage_ = NAN;
@@ -122,6 +142,9 @@ CallbackReturn ODriveHardwareInterface::on_init(const hardware_interface::Hardwa
 }
 
 CallbackReturn ODriveHardwareInterface::on_configure(const State&) {
+    for (auto& axis : axes_) {
+        axis.reset_status_feedback();
+    }
     if (!can_intf_.init(can_intf_name_, &event_loop_, std::bind(&ODriveHardwareInterface::on_can_msg, this, _1))) {
         RCLCPP_ERROR(
             rclcpp::get_logger("ODriveHardwareInterface"),
@@ -182,6 +205,46 @@ std::vector<hardware_interface::StateInterface> ODriveHardwareInterface::export_
             info_.joints[i].name,
             hardware_interface::HW_IF_POSITION,
             &axes_[i].pos_estimate_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_AXIS_ERROR,
+            &axes_[i].axis_error_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_AXIS_STATE,
+            &axes_[i].axis_state_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_PROCEDURE_RESULT,
+            &axes_[i].procedure_result_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_TRAJECTORY_DONE_FLAG,
+            &axes_[i].trajectory_done_flag_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_ACTIVE_ERRORS,
+            &axes_[i].active_errors_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_DISARM_REASON,
+            &axes_[i].disarm_reason_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_HEARTBEAT_AGE,
+            &axes_[i].heartbeat_age_
+        ));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info_.joints[i].name,
+            HW_IF_ERROR_AGE,
+            &axes_[i].error_age_
         ));
     }
 
@@ -256,6 +319,16 @@ return_type ODriveHardwareInterface::read(const rclcpp::Time& timestamp, const r
 
     while (can_intf_.read_nonblocking()) {
         // repeat until CAN interface has no more messages
+    }
+
+    const auto now = std::chrono::steady_clock::now();
+    for (auto& axis : axes_) {
+        if (axis.heartbeat_received_at_) {
+            axis.heartbeat_age_ = std::chrono::duration<double>(now - *axis.heartbeat_received_at_).count();
+        }
+        if (axis.error_received_at_) {
+            axis.error_age_ = std::chrono::duration<double>(now - *axis.error_received_at_).count();
+        }
     }
 
     return return_type::OK;
@@ -333,11 +406,24 @@ void ODriveHardwareInterface::set_axis_command_mode(const Axis& axis) {
     axis.send(state_msg);
 }
 
+void Axis::reset_status_feedback() {
+    axis_error_ = NAN;
+    axis_state_ = NAN;
+    procedure_result_ = NAN;
+    trajectory_done_flag_ = NAN;
+    active_errors_ = NAN;
+    disarm_reason_ = NAN;
+    heartbeat_age_ = NAN;
+    error_age_ = NAN;
+    heartbeat_received_at_.reset();
+    error_received_at_.reset();
+}
+
 void Axis::on_can_msg(const rclcpp::Time&, const can_frame& frame) {
     uint8_t cmd = frame.can_id & 0x1f;
 
     auto try_decode = [&]<typename TMsg>(TMsg& msg) {
-        if (frame.can_dlc < Get_Encoder_Estimates_msg_t::msg_length) {
+        if (frame.can_dlc < TMsg::msg_length) {
             RCLCPP_WARN(rclcpp::get_logger("ODriveHardwareInterface"), "message %d too short", cmd);
             return false;
         }
@@ -346,6 +432,22 @@ void Axis::on_can_msg(const rclcpp::Time&, const can_frame& frame) {
     };
 
     switch (cmd) {
+        case Heartbeat_msg_t::cmd_id: {
+            if (Heartbeat_msg_t msg; try_decode(msg)) {
+                axis_error_ = msg.Axis_Error;
+                axis_state_ = msg.Axis_State;
+                procedure_result_ = msg.Procedure_Result;
+                trajectory_done_flag_ = msg.Trajectory_Done_Flag;
+                heartbeat_received_at_ = std::chrono::steady_clock::now();
+            }
+        } break;
+        case Get_Error_msg_t::cmd_id: {
+            if (Get_Error_msg_t msg; try_decode(msg)) {
+                active_errors_ = msg.Active_Errors;
+                disarm_reason_ = msg.Disarm_Reason;
+                error_received_at_ = std::chrono::steady_clock::now();
+            }
+        } break;
         case Get_Encoder_Estimates_msg_t::cmd_id: {
             if (Get_Encoder_Estimates_msg_t msg; try_decode(msg)) {
                 pos_estimate_ = msg.Pos_Estimate * (2 * M_PI);
