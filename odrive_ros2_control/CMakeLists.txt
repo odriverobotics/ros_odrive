@@ -37,4 +37,20 @@ install(TARGETS odrive_ros2_control_plugin
   RUNTIME DESTINATION bin
 )
 
+# Make the existing ODrive enums available to applications using this package.
+install(FILES ../odrive_base/include/odrive_enums.h
+  DESTINATION include/${PROJECT_NAME}
+)
+ament_export_include_directories(include)
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_odrive_feedback
+    test/test_odrive_feedback.cpp
+    ../odrive_base/src/epoll_event_loop.cpp
+  )
+  ament_target_dependencies(test_odrive_feedback rclcpp hardware_interface pluginlib)
+  target_compile_features(test_odrive_feedback PRIVATE cxx_std_20)
+endif()
+
 ament_package()
