@@ -8,6 +8,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "socket_can.hpp"
 
+#include <cmath>
+
 namespace odrive_ros2_control {
 
 class Axis;
@@ -57,7 +59,7 @@ struct Axis {
     uint32_t node_id_;
 
     // Commands (ros2_control => ODrives)
-    double pos_setpoint_ = 0.0f; // [rad]
+    double pos_setpoint_ = NAN; // [rad], NaN until the controller writes a setpoint
     double vel_setpoint_ = 0.0f; // [rad/s]
     double torque_setpoint_ = 0.0f; // [Nm]
 
@@ -224,6 +226,7 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
              {info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT, &axis.torque_input_enabled_}}};
 
         bool mode_switch = false;
+        bool pos_input_started = false;
 
         for (const std::string& key : stop_interfaces) {
             for (auto& kv : interfaces) {
@@ -239,8 +242,17 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
                 if (kv.first == key) {
                     *kv.second = true;
                     mode_switch = true;
+                    pos_input_started |= (kv.second == &axis.pos_input_enabled_);
                 }
             }
+        }
+
+        if (pos_input_started) {
+            // Forget any setpoint left over from an earlier position controller.
+            // write() sends no position setpoint until the new controller has
+            // written one, so the ODrive keeps holding the position it captured
+            // on entering closed loop control.
+            axis.pos_setpoint_ = NAN;
         }
 
         if (mode_switch) {
@@ -265,6 +277,9 @@ return_type ODriveHardwareInterface::write(const rclcpp::Time&, const rclcpp::Du
     for (auto& axis : axes_) {
         // Send the CAN message that fits the set of enabled setpoints
         if (axis.pos_input_enabled_) {
+            if (!std::isfinite(axis.pos_setpoint_)) {
+                continue; // no position setpoint written by the controller yet
+            }
             Set_Input_Pos_msg_t msg;
             msg.Input_Pos = axis.pos_setpoint_ / (2 * M_PI);
             msg.Vel_FF = axis.vel_input_enabled_ ? (axis.vel_setpoint_ / (2 * M_PI)) : 0.0f;
