@@ -43,8 +43,12 @@ jobs:
           docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} \
           sh -c 'username=$(id -un) && sudo chown -R "$username":"$username" /workspace'
 
-      - name: Run colcon build
+      # `colcon test` by itself returns 0 even if tests fail. `colcon test-result`
+      # prints a summary and returns a non-zero exit code if any tests failed.
+      - name: Run colcon build and test
         run: |
           docker run -v ${{ github.workspace }}:/workspace -w /workspace local:${{ matrix.ros-version }} \
             /bin/bash -c "rosdep install --from-paths odrive_ros2_control odrive_botwheel_explorer -y --ignore-src && \
-            colcon build"
+            colcon build && \
+            colcon test --event-handlers console_direct+ && \
+            colcon test-result --verbose"
