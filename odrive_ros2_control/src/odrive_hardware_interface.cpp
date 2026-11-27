@@ -8,6 +8,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "socket_can.hpp"
 
+#include <cmath>
+
 namespace odrive_ros2_control {
 
 class Axis;
@@ -57,9 +59,11 @@ struct Axis {
     uint32_t node_id_;
 
     // Commands (ros2_control => ODrives)
-    double pos_setpoint_ = 0.0f; // [rad]
-    double vel_setpoint_ = 0.0f; // [rad/s]
-    double torque_setpoint_ = 0.0f; // [Nm]
+    // Each one is NaN until the controller writes it, and is set back to NaN
+    // when its interface is started (see perform_command_mode_switch()).
+    double pos_setpoint_ = NAN; // [rad]
+    double vel_setpoint_ = NAN; // [rad/s]
+    double torque_setpoint_ = NAN; // [Nm]
 
     // State (ODrives => ros2_control)
     // rclcpp::Time encoder_estimates_timestamp_;
@@ -218,27 +222,42 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
 ) {
     for (size_t i = 0; i < axes_.size(); ++i) {
         Axis& axis = axes_[i];
-        std::array<std::pair<std::string, bool*>, 3> interfaces = {
-            {{info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION, &axis.pos_input_enabled_},
-             {info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY, &axis.vel_input_enabled_},
-             {info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT, &axis.torque_input_enabled_}}};
+        struct Input {
+            std::string name;
+            bool* enabled;
+            double* setpoint;
+        };
+        std::array<Input, 3> interfaces = {
+            {{info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION,
+              &axis.pos_input_enabled_,
+              &axis.pos_setpoint_},
+             {info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY,
+              &axis.vel_input_enabled_,
+              &axis.vel_setpoint_},
+             {info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT,
+              &axis.torque_input_enabled_,
+              &axis.torque_setpoint_}}};
 
         bool mode_switch = false;
 
         for (const std::string& key : stop_interfaces) {
-            for (auto& kv : interfaces) {
-                if (kv.first == key) {
-                    *kv.second = false;
+            for (auto& input : interfaces) {
+                if (input.name == key) {
+                    *input.enabled = false;
                     mode_switch = true;
                 }
             }
         }
 
         for (const std::string& key : start_interfaces) {
-            for (auto& kv : interfaces) {
-                if (kv.first == key) {
-                    *kv.second = true;
+            for (auto& input : interfaces) {
+                if (input.name == key) {
+                    *input.enabled = true;
                     mode_switch = true;
+                    // Forget any setpoint left over from an earlier controller.
+                    // write() sends no setpoint until the new controller has
+                    // written one.
+                    *input.setpoint = NAN;
                 }
             }
         }
@@ -262,20 +281,36 @@ return_type ODriveHardwareInterface::read(const rclcpp::Time& timestamp, const r
 }
 
 return_type ODriveHardwareInterface::write(const rclcpp::Time&, const rclcpp::Duration&) {
+    // Feedforward terms go out in the same message as the setpoint, so one
+    // that was never written is sent as 0.0.
+    auto feedforward = [](bool enabled, double setpoint) {
+        return (enabled && std::isfinite(setpoint)) ? setpoint : 0.0;
+    };
+
     for (auto& axis : axes_) {
-        // Send the CAN message that fits the set of enabled setpoints
+        // Send the CAN message that fits the set of enabled setpoints.
+        // Nothing is sent until the controller has written the primary setpoint.
         if (axis.pos_input_enabled_) {
+            if (!std::isfinite(axis.pos_setpoint_)) {
+                continue;
+            }
             Set_Input_Pos_msg_t msg;
             msg.Input_Pos = axis.pos_setpoint_ / (2 * M_PI);
-            msg.Vel_FF = axis.vel_input_enabled_ ? (axis.vel_setpoint_ / (2 * M_PI)) : 0.0f;
-            msg.Torque_FF = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0f;
+            msg.Vel_FF = feedforward(axis.vel_input_enabled_, axis.vel_setpoint_) / (2 * M_PI);
+            msg.Torque_FF = feedforward(axis.torque_input_enabled_, axis.torque_setpoint_);
             axis.send(msg);
         } else if (axis.vel_input_enabled_) {
+            if (!std::isfinite(axis.vel_setpoint_)) {
+                continue;
+            }
             Set_Input_Vel_msg_t msg;
             msg.Input_Vel = axis.vel_setpoint_ / (2 * M_PI);
-            msg.Input_Torque_FF = axis.torque_input_enabled_ ? axis.torque_setpoint_ : 0.0f;
+            msg.Input_Torque_FF = feedforward(axis.torque_input_enabled_, axis.torque_setpoint_);
             axis.send(msg);
         } else if (axis.torque_input_enabled_) {
+            if (!std::isfinite(axis.torque_setpoint_)) {
+                continue;
+            }
             Set_Input_Torque_msg_t msg;
             msg.Input_Torque = axis.torque_setpoint_;
             axis.send(msg);
