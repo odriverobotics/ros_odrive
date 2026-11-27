@@ -31,6 +31,18 @@ pluginlib_export_plugin_description_file(hardware_interface odrive_hardware_inte
 
 target_compile_features(odrive_ros2_control_plugin PRIVATE cxx_std_20)
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  # Builds the hardware interface with a fake SocketCAN in place of socket_can.cpp
+  ament_add_gtest(test_setpoints
+    test/test_setpoints.cpp
+    test/fake_socket_can.cpp
+    ../odrive_base/src/epoll_event_loop.cpp
+  )
+  target_compile_features(test_setpoints PRIVATE cxx_std_20)
+  ament_target_dependencies(test_setpoints rclcpp hardware_interface)
+endif()
+
 install(TARGETS odrive_ros2_control_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
